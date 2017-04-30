@@ -1,0 +1,304 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>C++ basic concepts (1) | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="这篇先简单讨论C++中的几个basic concepts: lvalue, rvalue，lvalue reference, rvalue reference，cv-qualified, reference collapsing rule等等。这是理解template argument deduction的基础。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="C++ basic concepts (1)"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-11-19T16:00:00.000Z"><a href="/2014/11/20/cpp_basic_concepts/">2014-11-20</a></time>
+      
+      
+  
+    <h1 class="title">C++ basic concepts (1)</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>这篇先简单讨论C++中的几个basic concepts: lvalue, rvalue，lvalue reference, rvalue reference，cv-qualified, reference collapsing rule等等。这是理解template argument deduction的基础。</p>
+<a id="more"></a>
+<h2 id="1-Expression-category-taxonomy-lvalue-xvalue-pvalue"><a href="#1-Expression-category-taxonomy-lvalue-xvalue-pvalue" class="headerlink" title="1. Expression category taxonomy (lvalue, xvalue, pvalue)"></a>1. Expression category taxonomy (lvalue, xvalue, pvalue)</h2><p>C++98,03里有lvalue和rvlaue的概念。</p>
+<p>简单的说，lvalue一个在内存有确定地址的对象，可以寻址。而rvalue是一个临时对象。</p>
+<blockquote>
+<p>An lvalue (locator value) represents an object that occupies some identifiable location in memory (i.e. has an address).</p>
+</blockquote>
+<p>–cited from <a href="http://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c" target="_blank" rel="external">here</a></p>
+<p>看例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> a = <span class="number">1</span>;  <span class="comment">//a is an lvalue,  1 is an constant</span></div><div class="line"></div><div class="line"><span class="comment">// 1 = a; //Error!  1 is rvalue.</span></div><div class="line"></div><div class="line"><span class="comment">//(var + 1) = 0; //Error.   expression (var + 1) is an rvalue.</span></div></pre></td></tr></table></figure>
+<p>Ok, 到此，很熟悉很简单。 但是,不复杂不舒服斯基的C++在C++11里进行了更细致的分类，增加了三个categories</p>
+<ul>
+<li>rvalue</li>
+<li>lvalue</li>
+<li>xvalue</li>
+<li>glvalue</li>
+<li>prvalue</li>
+</ul>
+<p>为什么这么搞？<br>因为C++11引进了rvalue reference，在overload resolution，template argument deduction等地方，需要对expression的进行更细的分类。<br>它们之间的关系，看Venn图。from <a href="http://stackoverflow.com/questions/3601602/what-are-rvalues-lvalues-xvalues-glvalues-and-prvalues" target="_blank" rel="external">这里</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">----- Expression category taxonomy  -----</div><div class="line">   ______ ______</div><div class="line">   /      X      \</div><div class="line">  /      / \      \</div><div class="line"> |   l  | x |  pr  |</div><div class="line">  \      \ /      /</div><div class="line">   \______X______/</div><div class="line">       gl    r</div><div class="line"></div><div class="line"> // l is lvalue, pr is prvalue, x is xvalue, gl is glvalue, r is rvalue.</div></pre></td></tr></table></figure>
+<p>上图lvalue和rvalueC++11大致和C++98是一样的，只不过把rvalue分为了xvalue和pvalue. 而glvalue分为xvalue和lvalue<br>再看标准，</p>
+<blockquote>
+<p>Every expression belongs to exactly one of the fundamental classifications in this taxonomy: lvalue,<br>xvalue, or prvalue. This property of an expression is called its value category.  (N3690)</p>
+</blockquote>
+<p>一个expression的value category有三种: lvalue， prvalue, xvalue，这三种为基本的value category。<br>接下来看严谨一点儿的定义，但不完全，先忽略不常用的情况。</p>
+<h3 id="lvalue"><a href="#lvalue" class="headerlink" title="lvalue"></a>lvalue</h3><p>an lvalue is an expression that identifies a non-temporary object or a non-member function.</p>
+<blockquote>
+<p>(<a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">N3690 3.10</a>)<br>An lvalue (so called, historically, because lvalues could appear on the left-hand side of an assignment expression) designates a function or an object. [ Example: If E is an expression of pointer type, then <em>E is an lvalue expression referring to the object or function to which E points. As another example, <em>*the result of calling a function whose return type is an lvalue reference is an lvalue</em></em>. —end example ]</p>
+</blockquote>
+<p>简单起见，只列出常见的情况：</p>
+<ol>
+<li>The name of a variable or function in scope, regardless of type, even if the variable’s type is rvalue reference, the expression consisting of its name is an lvalue expression.</li>
+<li>Function call expression if the function’s return type is an lvalue reference</li>
+<li>Built-in pre-increment and pre-decrement, dereference, assignment and compound assignment, subscript (except on an array xvalue)</li>
+<li>Cast expression to lvalue reference type. static_cast<int&> x</int&></li>
+<li>String literal</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> a;  <span class="comment">//i is an lvalue</span></div><div class="line"><span class="keyword">int</span>&amp;&amp; arref = a;  <span class="comment">//arref is an lvalue, but it's type is 'rvalue reference'</span></div><div class="line">++a;   <span class="comment">//++a is an lvalue</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> arr[] = &#123;<span class="number">1</span>,<span class="number">2</span>&#125;;</div><div class="line"></div><div class="line"><span class="keyword">int</span>* p = &amp;arr[<span class="number">0</span>];  <span class="comment">//arr, arr[0] and p are both lvalue</span></div><div class="line"></div><div class="line">*(p+<span class="number">1</span>) = <span class="number">3</span>;  <span class="comment">//dereference.   expression (p+1) is an rvalue,  but *(p+1) is an lvalue</span></div><div class="line"></div><div class="line"><span class="string">"hello"</span>;     <span class="comment">//"hello" is an lvalue</span></div></pre></td></tr></table></figure>
+<h3 id="pvalue"><a href="#pvalue" class="headerlink" title="pvalue"></a>pvalue</h3><p>A prvalue (“pure” rvalue) is an expression that identifies a temporary object (or a subobject thereof) or is a value not associated with any object.</p>
+<p>下列expressions是prvalues:</p>
+<ol>
+<li>Literal (except string literal), such as 42 or true or nullptr.</li>
+<li>Function call  if the function’s or the overloaded operator’s return type is not a reference,<br>such as str.substr(1, 2) or str1 + str2</li>
+<li>Built-in post-increment and post-decrement, arithmetic and logical operators, comparison operators, address-of operator</li>
+<li>Cast expression to any type other than reference type.</li>
+<li>Lambda expressions, such as <a href="int x"></a>{return x*x;}  (since C++11)</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">23L</span> <span class="comment">// 23L is an pvalue</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> a;</div><div class="line">a++;  <span class="comment">//a++ is an pvalue</span></div><div class="line"></div><div class="line">(<span class="number">1</span>+<span class="number">2</span>); <span class="comment">// (1+2) is an pvalue</span></div><div class="line"></div><div class="line">(<span class="keyword">int</span>) <span class="number">1.2</span>;  <span class="comment">// (int)1.2</span></div></pre></td></tr></table></figure>
+<h3 id="xvalue"><a href="#xvalue" class="headerlink" title="xvalue"></a>xvalue</h3><blockquote>
+<p>An xvalue (an “eXpiring” value) also refers to an object, usually near the end of its lifetime (so that its<br>resources may be moved, for example). An xvalue is the result of certain kinds of expressions involving<br>rvalue references (8.3.2). [ Example: The result of calling a function whose return type is an rvalue<br>reference is an xvalue. —end example ]</p>
+<p>An xvalue is an expression that identifies an “eXpiring” object, that is, the object that may be moved from. The object identified by an xvalue expression may be a nameless temporary, it may be a named object in scope, or any other kind of object, but if used as a function argument, xvalue will always bind to the rvalue reference overload if available.</p>
+</blockquote>
+<p>下列expressions是xvalues:</p>
+<ol>
+<li>A function call if the function’s or the return type is an rvalue reference to object type, such as std::move(val)</li>
+<li>A cast expression to an rvalue reference to object type, such as static_cast<t&&>(val) or(T&amp;&amp;)val</t&&></li>
+</ol>
+<p>Like prvalues, xvalues bind to rvalue references, but unlike prvalues, an xvalue may be polymorphic. and a non-class xvalue may be cv-qualified. (since C++11)</p>
+<p>glvalue和rvalue就不谈，可看ISO的标准文档。到现在，看下面例子，应该很好理解了。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span>   <span class="title">prvalue</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span>&amp;  <span class="title">lvalue</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span>&amp;&amp; <span class="title">xvalue</span><span class="params">()</span></span>;</div></pre></td></tr></table></figure>
+<p>有一点需要注意，<strong>“class rvalues can have cv-qualified types, but built-in types (like int) can’t ”</strong> 在研究tempalte argument deduction的时候，这一点曾让我迷惑过，虽然现在看起来比较自然，看代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Foo</span> &#123;</span>&#125;;</div><div class="line"></div><div class="line"><span class="function">Foo <span class="title">f</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo(); &#125;</div><div class="line"><span class="function"><span class="keyword">const</span> Foo <span class="title">cf</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo(); &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">b</span><span class="params">()</span> </span>&#123;<span class="keyword">int</span> i=<span class="number">0</span>; <span class="keyword">return</span> i;&#125;; <span class="comment">//return built-in type rvalue</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">int</span> <span class="title">cb</span><span class="params">()</span> </span>&#123;<span class="keyword">int</span> i=<span class="number">0</span>; <span class="keyword">return</span> i;&#125; <span class="comment">// try to add const</span></div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">g</span><span class="params">(T&amp;&amp; t)</span> </span>&#123;&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span> <span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">        g (f());   <span class="comment">//calls: g&lt;Foo&gt;(Foo&amp;&amp;)</span></div><div class="line">        g (cf());  <span class="comment">//calls: g&lt;Foo const&gt;(Foo const&amp;&amp;).</span></div><div class="line">        g (b());   <span class="comment">//calls: g&lt;int&gt;(int&amp;&amp;)</span></div><div class="line">        g (cb());  <span class="comment">//calls: g&lt;int&gt;(int&amp;&amp;) Notice:no const version!</span></div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>若不理解T是咋deduce出来的，可暂且不管. 通过对比，至少可以得出built-in type rvalue没有cv-qualifiyed版本。</p>
+<h2 id="2-C-Types"><a href="#2-C-Types" class="headerlink" title="2. C++ Types"></a>2. C++ Types</h2><p>C++的Types分为三种：<strong>Fundamental types</strong>, <strong>Compound Types</strong>, <strong>CV-qualifiers</strong><br><strong>Fundamental types:</strong>是指bool, int, char 等等。</p>
+<p><strong>Compound Types:</strong>包括：</p>
+<ul>
+<li>arrays, pointers, functions</li>
+<li>references (lvalue reference 和 rvalue reference)</li>
+<li>classes, unions</li>
+</ul>
+<p><strong>CV-qualifiers:</strong> 指 const qualifier和volatile qualifier</p>
+<h2 id="3-lvalue-reference-rvalue-reference"><a href="#3-lvalue-reference-rvalue-reference" class="headerlink" title="3. lvalue reference / rvalue reference"></a>3. lvalue reference / rvalue reference</h2><p>有了上面Types的分类，再来研究下lvalue reference和rvalue reference。<br><a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">C++ ISO文档</a>里谈到的术语reference，包含了两种，lvalue reference和rvalue reference.</p>
+<p>lvalue reference语法形式是 T&amp;， rvalue reference是 T&amp;&amp;。 rvalue reference和lvalue reference差不多，特殊地方在于rvalue reference能绑定到一个临时变量上，而非const的rvalue reference不能。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">A a;</div><div class="line">A&amp; a_ref = a;  <span class="comment">// an lvalue reference</span></div><div class="line"></div><div class="line">A a;</div><div class="line">A&amp;&amp; a_rref = a; <span class="comment">// a_rref's type of rvalue reference</span></div><div class="line">              <span class="comment">// but a_rref is an lvalue, because the named rvalue references are lvalues.</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span>&amp;&amp; t)</span> </span>&#123;</div><div class="line">  <span class="comment">// t is initialized with an rvalue expression</span></div><div class="line">  <span class="comment">// but is actually an lvalue expression itself, here t is a named rvalue reference.</span></div><div class="line">&#125;</div><div class="line"></div><div class="line">A&amp;  a_ref3 = A();  <span class="comment">// Error!</span></div><div class="line">A&amp;&amp; a_ref4 = A();  <span class="comment">// Ok</span></div></pre></td></tr></table></figure>
+<p>a_rref’s type of rvalue reference but a_rref is an lvalue, because the named rvalue references are lvalues. 稍有晦涩。术语lvalue / rvalue 是表达式的分类(value categories of Expressions), 不是C++的Types(类型);而lvalue reference/rvalue reference是compound type是一种type.</p>
+<h2 id="4-reference-collapse-rule"><a href="#4-reference-collapse-rule" class="headerlink" title="4. reference collapse rule"></a>4. reference collapse rule</h2><blockquote>
+<p>If a typedef (7.1.3), a type template-parameter (14.3.1), or a decltype-specifier (7.1.6.2) denotes a type TR</p>
+</blockquote>
+<p>that is a reference to a type T, an attempt to create the type “lvalue reference to cv TR” creates the type</p>
+<p>“lvalue reference to T”, while an attempt to create the type “rvalue reference to cv TR” creates the type TR.</p>
+<p>– cited from <a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">ISO N3690</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">int</span>&amp;  lref;</div><div class="line"><span class="keyword">typedef</span> <span class="keyword">int</span>&amp;&amp; rref;</div><div class="line"><span class="keyword">int</span> n;</div><div class="line">lref&amp;  r1 = n; <span class="comment">// type of r1 is int&amp;</span></div><div class="line">lref&amp;&amp; r2 = n; <span class="comment">// type of r2 is int&amp;</span></div><div class="line">rref&amp;  r3 = n; <span class="comment">// type of r3 is int&amp;</span></div><div class="line">rref&amp;&amp; r4 = <span class="number">1</span>; <span class="comment">// type of r4 is int&amp;&amp;</span></div></pre></td></tr></table></figure>
+<p>这个规则和template argument deduction 中的T&amp;&amp; special case, 就是std::forward实现的基础。</p>
+<h2 id="5-Recommended-References"><a href="#5-Recommended-References" class="headerlink" title="5. Recommended References"></a>5. Recommended References</h2><ol>
+<li><p><a href="http://en.cppreference.com/w/cpp/language/value_category" target="_blank" rel="external">value category</a></p>
+</li>
+<li><p><a href="http://isocpp.org/blog/2012/11/universal-references-in-c11-scott-meyers" target="_blank" rel="external">Universal References in C++11</a>  – by Scott Meyers</p>
+</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/技术/">技术</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2014/11/20/cpp_basic_concepts/" data-title="C++ basic concepts (1)" data-url="http://kexianda.github.io/2014/11/20/cpp_basic_concepts/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>5</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>1</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>2</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

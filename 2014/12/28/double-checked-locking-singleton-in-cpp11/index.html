@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Double-checked Locking | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：
+
+了解CPU的Memory Barriers机制(Paul McKenny的Memory Barriers: a Hardware View for Software Hackers)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。
+然后看Jeff Preshing的blog, 他的帖子深入浅出，写得非常好。
+《C++ Concurrency in action》, 作者是boost thread的作者。讲stl的thread的接口。
+再看看Herb Sutter,Hans Boehm等人的文章。 Bartosz Milewski的博客也值得看看.
+
+double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇paper，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇文章讨论这个问题.
+看完大牛们的文章, 一步一步来动手实现一个Singleton，最后用template泛化.">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Double-checked Locking"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-12-27T16:00:00.000Z"><a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/">2014-12-28</a></time>
+      
+      
+  
+    <h1 class="title">Double-checked Locking</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：</p>
+<ol>
+<li>了解CPU的Memory Barriers机制(Paul McKenny的<a href="http://irl.cs.ucla.edu/~yingdi/web/paperreading/whymb.2010.06.07c.pdf" target="_blank" rel="external">Memory Barriers: a Hardware View for Software Hackers</a>)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。</li>
+<li>然后看Jeff Preshing的<a href="http://preshing.com" target="_blank" rel="external">blog</a>, 他的帖子深入浅出，写得非常好。</li>
+<li>《C++ Concurrency in action》, 作者是boost thread的作者。讲stl的thread的接口。</li>
+<li>再看看Herb Sutter,Hans Boehm等人的文章。 <a href="http://bartoszmilewski.com" target="_blank" rel="external">Bartosz Milewski的博客</a>也值得看看.</li>
+</ol>
+<p>double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇<a href="http://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf" target="_blank" rel="external">paper</a>，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇<a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11" target="_blank" rel="external">文章</a>讨论这个问题.</p>
+<p>看完大牛们的文章, 一步一步来动手实现一个Singleton，最后用template泛化.</p>
+<a id="more"></a>
+<p>###1. 单线程<br>Singleton的单线程实现很简单：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//header file</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></div><div class="line"><span class="keyword">public</span>:</div><div class="line">	<span class="function"><span class="keyword">static</span> Singleton* <span class="title">getInstance</span> <span class="params">()</span></span>;</div><div class="line"><span class="keyword">private</span>:</div><div class="line">	<span class="keyword">static</span> Singleton* m_Instance;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">//implementation.  Version 0.1</span></div><div class="line">Singleton* Singleton::m_Instance = <span class="literal">nullptr</span>;</div><div class="line"></div><div class="line">Singleton* Singleton::getInstance () &#123;</div><div class="line">	<span class="keyword">if</span> (m_Instance == <span class="literal">nullptr</span>) &#123;</div><div class="line">		m_Instance = <span class="keyword">new</span> Singleton;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> Singleton;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在单线程环境，这个版本工作的很好。 但在多线程线环境下有data race了， 关键在那个if判断， 多个线程可能同时进入if里面。</p>
+<p>###2.多线程的尝试实现<br>C++11已经支持多线程，无需调用库，用std::mutex加个锁， 把if判断放到临界区里保护起来:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//header file</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></div><div class="line"><span class="keyword">public</span>:</div><div class="line">	<span class="function"><span class="keyword">static</span> Singleton* <span class="title">getInstance</span> <span class="params">()</span></span>;</div><div class="line"></div><div class="line"><span class="keyword">private</span>:</div><div class="line">	<span class="keyword">static</span> Singleton* m_Instance;</div><div class="line">	<span class="keyword">static</span> mutex m_mutex;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">//implementation.  Version 0.2  it is ok, but too expensive</span></div><div class="line">Singleton* Singleton::m_Instance = <span class="literal">nullptr</span>;</div><div class="line"></div><div class="line"><span class="comment">//oops, high cost.</span></div><div class="line">Singleton* Singleton::getInstance () &#123;</div><div class="line">	lock_guard&lt;mutex&gt; lock(m_mutex);</div><div class="line">	<span class="keyword">if</span> (m_Instance == <span class="literal">nullptr</span>) &#123;</div><div class="line">		m_Instance = <span class="keyword">new</span> Singleton;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> Singleton;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个版本有什么问题呢？成本太高，每个调用都去获取锁，单例创建好之后，其实已经没有必要获取锁了，并发情况下会导致其他线程因等待锁而被系统休眠，成本太高了。 那么，每次调用都加锁， 在获取锁之前再加一个if(m_Instance == nullptr)判断， 是否可行？<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//implementation.  Version 0.3</span></div><div class="line">Singleton* Singleton::m_Instance = <span class="literal">nullptr</span>;</div><div class="line"></div><div class="line"><span class="comment">//oops! it does NOT work</span></div><div class="line">Singleton* Singleton::getInstance () &#123;</div><div class="line">	<span class="keyword">if</span> (m_Instance == <span class="literal">nullptr</span>) &#123;</div><div class="line">		lock_guard&lt;mutex&gt; lock(m_mutex);</div><div class="line">		<span class="keyword">if</span> (m_Instance == <span class="literal">nullptr</span>) &#123;</div><div class="line">			m_Instance = <span class="keyword">new</span> Singleton;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> Singleton;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>想法很好，但是有严重的缺陷，来看看 m_Instance = new Singleton, 这个new操作是先分配一块空间，然后执行构造函数，相当于：<br>pInstance = operator new(sizeof(Singleton)); // Step 1<br>new (pInstance) Singleton; // Step 2<br>如果一个线程执行到step 1时， 另一个线程发现 m_Instance != nullptr, 直接把 m_Instance 返回，而Step 2 还没来得及执行，返回的指针指向一块并没有构造好的空间…<br>那么，来加一个临时变量，思路是让allocator和constructor都做完之后，再把指针赋给m_Instance，这样可行么？<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//implementation.  Version 0.4  </span></div><div class="line">Singleton* Singleton::getInstance () &#123;</div><div class="line">	Singleton * tmp = m_Instance;</div><div class="line">	<span class="keyword">if</span> (m_Instance == <span class="literal">nullptr</span>) &#123;</div><div class="line">		lock_guard&lt;mutex&gt; lock(m_mutex);</div><div class="line">		tmp = m_Instance;</div><div class="line">		<span class="keyword">if</span> (m_Instance == <span class="literal">nullptr</span>) &#123;</div><div class="line">			tmp = <span class="keyword">new</span> Singleton;   <span class="comment">//oops</span></div><div class="line">			m_Instance = tmp;  </div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> Singleton;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>但是，我们知道，编译器优化和CPU流水线执行都有可能对代码执行顺序进行re-order.(参考<a href="http://rsim.cs.illinois.edu/Pubs/08PLDI.pdf" target="_blank" rel="external">Memory Model</a>)， 这样：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//re-order之后，不能保证 step 2一定在step 3之前执行完毕。</span></div><div class="line">tmp = <span class="keyword">operator</span> <span class="keyword">new</span>(<span class="keyword">sizeof</span>(Singleton)); <span class="comment">// Step 1</span></div><div class="line"><span class="keyword">new</span> (pInstance) Singleton; <span class="comment">// Step 2</span></div><div class="line">m_Instance = tmp; <span class="comment">//Step 3</span></div></pre></td></tr></table></figure></p>
+<p>###3.C++11 Sequentially Consistent Atomics<br>要保证step 3在step 2之后执行，可以用Sequential ordering实现(即使用默认的memory_order_seq_cst)，编译器会插入memery barrier来保证。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;mutex&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;atomic&gt;</span></span></div><div class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></div><div class="line"><span class="keyword">public</span>:</div><div class="line">	<span class="function"><span class="keyword">static</span> Singleton* <span class="title">getInstance</span> <span class="params">()</span></span>;</div><div class="line"><span class="keyword">private</span>:</div><div class="line">	<span class="keyword">static</span> <span class="built_in">std</span>::atomic&lt;Singleton*&gt; m_Instance;</div><div class="line">	<span class="keyword">static</span> mutex m_mutex;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="built_in">std</span>::atomic&lt;Singleton*&gt; Singleton::m_Instance;</div><div class="line"><span class="built_in">std</span>::mutex Singleton::m_mutex;</div><div class="line"></div><div class="line">Singleton* Singleton::getInstance () &#123;</div><div class="line">    Singleton* tmp = m_Instance.load ();  <span class="comment">//memory_order_seq_cst, Sequential ordering</span></div><div class="line">    <span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">        <span class="built_in">std</span>::lock_guard&lt;<span class="built_in">std</span>::mutex&gt; lock(m_mutex);</div><div class="line"></div><div class="line">        <span class="comment">//maybe many threads are locked here by the mutex at the same time.</span></div><div class="line">        <span class="comment">//After the lock is free(the singleton is created by one thread), load again</span></div><div class="line">        tmp = m_Instance.load(<span class="built_in">std</span>::memory_order_relaxed);</div><div class="line">        <span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">            tmp = <span class="keyword">new</span> Singleton;</div><div class="line">            m_Instance.store (tmp);  <span class="comment">//memory_order_seq_cst</span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> tmp;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>那么，我们来看看， atomic的load和store是怎样保证re-order之后语义还是正确的呢？<br>用gcc生成汇编代码(默认是AT&amp;T风格汇编, 我习惯看intel风格的，加个masm=intel参数):</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#</span> intel i5, ubuntu14.04, gcc 4.8.2</div><div class="line">g++ -O2 -S -masm=intel -pthread -std=c++11  Singleton.cpp -o asm.s</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">call	_Znwm   ; call new</div><div class="line">.LEHE0:</div><div class="line">	mov	QWORD PTR _ZN9Singleton10m_instanceE[rip], rax  ;return value into rax</div><div class="line">	test	rbp, rbp ; </div><div class="line">	mov	rbx, rax   ; rbx is the var tmp</div><div class="line">	mfence       ;memory fence!</div><div class="line">	je	.L11</div></pre></td></tr></table></figure>
+<p>可以看到编译器在x86平台上为store()生成了mfence指令。 那load()为什么没有memory fence呢，是因为x86/64是”Strong”类型的CPU(细节可参考<a href="http://preshing.com/20120930/weak-vs-strong-memory-models" target="_blank" rel="external">weak vs strong memory models</a>和Paul McKenny的文章<a href="http://irl.cs.ucla.edu/~yingdi/web/paperreading/whymb.2010.06.07c.pdf" target="_blank" rel="external">Memory Barriers</a>).</p>
+<p>###4. Low-Level Ordering Constraints<br>一般来说，用默认的memory_order_seq_cst已经够用了，代码也简单一些。不过mfence指令的成本较高(几十倍于register to register指令，因为需要在CPU各个core和cache里进行复杂的通讯，同步cache line等等)，如果是在高并发情景下，可以考虑进一步优化。可以用low-level的acquire/release operation. 有点晦涩，可以参考<a href="http://preshing.com/20130922/acquire-and-release-fences" target="_blank" rel="external">acquire and release fences</a>和<a href="http://preshing.com/20120913/acquire-and-release-semantics/" target="_blank" rel="external">acquire and release semantics</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">std</span>::atomic&lt;Singleton*&gt; Singleton::m_Instance;</div><div class="line"><span class="built_in">std</span>::mutex Singleton::m_mutex;</div><div class="line"></div><div class="line">Singleton* Singleton::getInstance () &#123;</div><div class="line">    Singleton* tmp = m_Instance.load (<span class="built_in">std</span>::memory_order_acquire);</div><div class="line">    <span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">        <span class="built_in">std</span>::lock_guard&lt;<span class="built_in">std</span>::mutex&gt; lock (m_mutex);</div><div class="line">        tmp = m_Instance.load (<span class="built_in">std</span>::memory_order_relaxed);</div><div class="line">        <span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">            tmp = <span class="keyword">new</span> Singleton;</div><div class="line">            m_Instance.store (tmp, <span class="built_in">std</span>::memory_order_release);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> tmp;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再生成汇编代码，在x86/64平台上，可以看到，memory_order_release没有生成mfence指令。<br>那，为什么还要memory_order_relaxed、memory_order_release呢？ 因为它们是语言层次上的抽象，可以阻止编译器的指令re-order. 同时保证了不同CPU平台的可移植性,在ARM， PowerPC等平台会生成对应的指令。</p>
+<p>###5. 用Template泛化</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;mutex&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;atomic&gt;</span></span></div><div class="line"></div><div class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></div><div class="line"><span class="keyword">private</span>:</div><div class="line">	<span class="keyword">static</span> atomic&lt;T*&gt; m_instance;</div><div class="line">	<span class="keyword">static</span> mutex	m_mutex;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">	<span class="function"><span class="keyword">static</span> T* <span class="title">getInstance</span> <span class="params">()</span> </span>;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; atomic&lt;T*&gt; Singleton&lt;T&gt;::m_instance;</div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; mutex	Singleton&lt;T&gt;::m_mutex;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; T* Singleton&lt;T&gt;::getInstance () &#123;</div><div class="line">		T* tmp = m_instance.load(<span class="built_in">std</span>::memory_order_acquire);</div><div class="line">		<span class="comment">//atomic_thread_fence (std::memory_order_acquire);</span></div><div class="line">		<span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>)	&#123;</div><div class="line">			lock_guard&lt;mutex&gt; lock(m_mutex);</div><div class="line">			<span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">				tmp = <span class="keyword">new</span> T;</div><div class="line">				<span class="comment">//atomic_thread_fence  (std::memory_order_release);</span></div><div class="line">				m_instance.store (tmp, <span class="built_in">std</span>::memory_order_release);</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">return</span> tmp;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> &#123;</span>&#125;;</div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">	Foo* inst = Singleton&lt;Foo&gt;::getInstance ();</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/技术/">技术</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>, <a href="/tags/多线程/">多线程</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2014/12/28/double-checked-locking-singleton-in-cpp11/" data-title="Double-checked Locking" data-url="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>5</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>1</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>2</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

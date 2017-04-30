@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>基于库实现多线程的局限 | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="最近在看C++ Memory Model, 顺便读了Hans-J. Boehm的10年前的paper Threads Cannot be Implemented as a Library。C++多线程库有很多，但Boehm指出，C++的多线程库大多数情况是OK的，但在有些情况下是有问题的，并列举了三种情况。此外，因库隐藏了底层现实，在追求极致性能的地方使用库有限制。Boehm的结论是：C++必须在语言层面上支持多线性。正因Boehm和Herb Sutter的努力，C++11支持了多线程。
+Boehm大叔以POSIX的规范pthread为例，进行详细的论述，简单总结如下：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="基于库实现多线程的局限"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-12-18T16:00:00.000Z"><a href="/2014/12/19/基于库实现多线程的局限/">2014-12-19</a></time>
+      
+      
+  
+    <h1 class="title">基于库实现多线程的局限</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近在看C++ Memory Model, 顺便读了Hans-J. Boehm的10年前的paper <a href="http://www.hpl.hp.com/techreports/2004/HPL-2004-209.pdf" target="_blank" rel="external">Threads Cannot be Implemented as a Library</a>。<br>C++多线程库有很多，但Boehm指出，C++的多线程库大多数情况是OK的，但在有些情况下是有问题的，并列举了三种情况。此外，因库隐藏了底层现实，在追求极致性能的地方使用库有限制。Boehm的结论是：C++必须在语言层面上支持多线性。正因Boehm和Herb Sutter的努力，C++11支持了多线程。</p>
+<p>Boehm大叔以POSIX的规范pthread为例，进行详细的论述，简单总结如下：<br><a id="more"></a></p>
+<p>##1. 正确性问题<br>1.1  第一种情况。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">x = y = <span class="number">0</span>;  <span class="comment">//shared variables</span></div><div class="line">Thread1:                  Thread2:</div><div class="line"><span class="keyword">if</span> (x == <span class="number">1</span>) ++y;         <span class="keyword">if</span> (y == <span class="number">1</span>) ++x;</div></pre></td></tr></table></figure></p>
+<p>这是合法的pthreads程序，初看，没有data race，输出是 x == 0, y ==0. 但是compiler是不知道多线程的，可能有如下优化:<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Thread1:                  Thread2:</div><div class="line">++y; <span class="keyword">if</span> (x != <span class="number">1</span>) --y;        ++x; <span class="keyword">if</span> (y != <span class="number">1</span>) --x;</div></pre></td></tr></table></figure></p>
+<p>这下，有了data race， 可能输出 x==1, y==1.</p>
+<p>1.1  第二种情况<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> &#123;</span> <span class="keyword">char</span> a; <span class="keyword">char</span> b; <span class="keyword">char</span> c; <span class="keyword">char</span> d; <span class="keyword">char</span> e; <span class="keyword">char</span> f; <span class="keyword">char</span> g; <span class="keyword">char</span> h; &#125; x;</div><div class="line"></div><div class="line">Thread <span class="number">1</span>:        Thread <span class="number">2</span>:</div><div class="line">x.a = <span class="string">'a'</span>;          x.b=<span class="string">'b'</span>;</div></pre></td></tr></table></figure></p>
+<p>用pthread实现上面程序，合法，看起来也没有data race。 但是，如果没有语言层面的支持，compiler并不知道多线程，可能把8个byte一次性读写。 这样又有了data race问题。</p>
+<p>1.3 第三种情况, Register promotion<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> (...) &#123;</div><div class="line">...</div><div class="line"><span class="keyword">if</span> (mt) pthread_mutex_lock(...);</div><div class="line">x = ... x ...</div><div class="line"><span class="keyword">if</span> (mt) pthread_mutex_unlock(...);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>初看，有pthread mutex的保护，可以无忧了。但是，在compiler眼里，pthread_mutex_lock ( ) 和pthread_mutex_unlock ( ) 是透明的，只不过是两个普通函数调用而已，于是，compiler把x从循环里弄出来，放到寄存器里去，提高效率, 于是又悲剧了…<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">r = x;     <span class="comment">//pseudo-code,  r is a register</span></div><div class="line"><span class="keyword">for</span> (...) &#123;</div><div class="line">...</div><div class="line"><span class="keyword">if</span> (mt) &#123;</div><div class="line">x = r; pthread_mutex_lock(...); r = x;</div><div class="line">&#125;</div><div class="line">r = ... r ...</div><div class="line"><span class="keyword">if</span> (mt) &#123;</div><div class="line">x = r; pthread_mutex_unlock(...); r = x;</div><div class="line">&#125;</div><div class="line">&#125;</div><div class="line">x = r;</div></pre></td></tr></table></figure></p>
+<p>##2. 性能问题<br>pthread_mutex_lock ( )和pthread_mutex_unlock ( )一般要求一个硬件的atomic memory update指令，为了阻止CPU的的reordering，可能还需要一个memory barrier指令，这些指令的成本百倍于register-to-register指令。这样，基于库的多线程不用使用lock-free/wait-free技术追求更好的性能。</p>
+<p>forhappy同学收集了一个不错的<a href="https://github.com/forhappy/A-Detailed-Cplusplus-Concurrency-Tutorial/blob/master/zh/chapter8-Memory-Model/web-resources.md" target="_blank" rel="external">C++ 多线程与内存模型资料汇</a>. 看看。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/技术/">技术</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/多线程/">多线程</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2014/12/19/基于库实现多线程的局限/" data-title="基于库实现多线程的局限" data-url="http://kexianda.github.io/2014/12/19/基于库实现多线程的局限/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>5</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>1</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>2</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

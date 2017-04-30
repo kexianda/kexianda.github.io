@@ -1,0 +1,256 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>template argument deduction | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="C++11加入了rvalue reference的概念后，类型推导规则更加复杂了。微软的Stephan Lavavej在Channel9的Core C++系列中对deduction简单地做了些介绍 ，但并没有深入地讲。我拿C++标准研究了一把，发现deduction的规则细节还是比较繁琐的。标准文档的可读性不太好，颇费脑细胞. 相对而言cppreference可读性要好一些。这篇主要总结函数调用时的类型推导(Deduction from a function call)和不进行类型推导的几种情况(Non-deduced contexts)">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="template argument deduction"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-11-24T16:00:00.000Z"><a href="/2014/11/25/template_argument_deduction/">2014-11-25</a></time>
+      
+      
+  
+    <h1 class="title">template argument deduction</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>C++11加入了rvalue reference的概念后，类型推导规则更加复杂了。微软的Stephan Lavavej在Channel9的Core C++系列中对deduction简单地做了些<a href="http://channel9.msdn.com/Series/C9-Lectures-Stephan-T-Lavavej-Core-C-/Stephan-T-Lavavej-Core-C-2-of-n" target="_blank" rel="external">介绍</a> ，但并没有深入地讲。我拿<a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">C++标准</a>研究了一把，发现deduction的规则细节还是比较繁琐的。标准文档的可读性不太好，颇费脑细胞. 相对而言<a href="http://en.cppreference.com/w/cpp/language/template_argument_deduction" target="_blank" rel="external">cppreference</a>可读性要好一些。这篇主要总结函数调用时的类型推导(Deduction from a function call)和不进行类型推导的几种情况(Non-deduced contexts)</p>
+<a id="more"></a>
+<p>如果不了解lvalue, xvalue和pvalue. 可参考<a href="http://kexianda.info/2014/11/20/cpp_basic_concepts" target="_blank" rel="external">前一篇</a>.</p>
+<h2 id="Deduction-from-a-function-call"><a href="#Deduction-from-a-function-call" class="headerlink" title="Deduction from a function call"></a>Deduction from a function call</h2><p>先说明一下几个术语。模板函数的形数parameter简称为 P，实参argument简称为 A. 编译器推导是指根据P/A pair推导出P的真正Type。 推导过程中，通过一定规则对P/A进行调整. P调整后称为deduced A, A调整后称为tranformed A.  </p>
+<p>推导规则<br>一般来说deduced A==tranformed A，如果不相同，再由额外规则处理。多个参数的情况，则对每个P/A pair分别进行推导，如果有不一致，则失败。有一点，在标准里没找到（我没有通读），if A is reference type，<em>tranformed A</em> is the type referred by A. </p>
+<h3 id="Rule-1-if-P-is-NOT-a-reference-type"><a href="#Rule-1-if-P-is-NOT-a-reference-type" class="headerlink" title="(Rule 1) if P is NOT a reference type"></a>(Rule 1) if P is NOT a reference type</h3><blockquote>
+<p>(rule 1): if P is NOT a reference type: (<a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">N3690</a>, 14.8.2.1/2)</p>
+<ul>
+<li>1.1 A is array, array-to-pointer conversion</li>
+<li>1.2 A is function type, function-to-pointer conversion</li>
+<li>1.3 if A is cv-qualified type, top level cv-qulifiers of A’s type are ignored</li>
+</ul>
+</blockquote>
+<p>看例子，具体的推导过程写在注释里。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">void</span> <span class="title">f</span>(<span class="title">T</span>);</span></div><div class="line"> </div><div class="line"><span class="keyword">int</span> a[<span class="number">3</span>];</div><div class="line">f(a);     <span class="comment">// P = T,  </span></div><div class="line">	  <span class="comment">// A = int[3], after adjustment, transformed A is int*. (Rule 1.1)</span></div><div class="line">	  <span class="comment">// T -&gt; int*   calls: f&lt;int*&gt;()</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">g</span><span class="params">(<span class="keyword">int</span>)</span></span>;</div><div class="line">f(g); <span class="comment">// P = T, </span></div><div class="line">      <span class="comment">// A = void(int), adjusted to void(*)(int).  (Rule 1.1)</span></div><div class="line">      <span class="comment">// T -&gt; void(*)(int)  calls:f&lt;void(*)(int) &gt;()</span></div><div class="line"></div><div class="line"><span class="keyword">const</span> <span class="keyword">int</span> b = <span class="number">13</span>;</div><div class="line">f(b); <span class="comment">// P = T, </span></div><div class="line">	  <span class="comment">// A = const int, transformed A is int. (Rule 1.3)</span></div><div class="line">	  <span class="comment">// T -&gt; int  calls:f&lt;int&gt;()</span></div><div class="line"></div><div class="line"><span class="comment">//A is a reference</span></div><div class="line">Foo&amp;&amp; fref = Foo();</div><div class="line">f (fref);<span class="comment">// P = T, </span></div><div class="line">	  <span class="comment">// A = Foo&amp;&amp;.   'Foo' is used for deduction</span></div><div class="line">	  <span class="comment">// T -&gt; Foo.   calls:f&lt;Foo&gt;(Foo)</span></div></pre></td></tr></table></figure></p>
+<h3 id="Rule-2-if-P-is-cv-qualified-type-the-top-level-cv-qualifiers-of-P’s-type-are-ignored-for-tyep-deduction"><a href="#Rule-2-if-P-is-cv-qualified-type-the-top-level-cv-qualifiers-of-P’s-type-are-ignored-for-tyep-deduction" class="headerlink" title="(Rule 2): if P is cv-qualified type, the top level cv-qualifiers of P’s type are ignored for tyep deduction"></a>(Rule 2): if P is cv-qualified type, the top level cv-qualifiers of P’s type are ignored for tyep deduction</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">void</span> <span class="title">f</span>(<span class="title">const</span> <span class="title">T</span>);</span></div><div class="line"><span class="keyword">int</span> i = <span class="number">1</span>;</div><div class="line">f (i);   <span class="comment">// P = const T,  deduced P is T.</span></div><div class="line">	  <span class="comment">// A = int</span></div><div class="line">	  <span class="comment">// T -&gt; int  calls:f&lt;int&gt;()</span></div><div class="line"><span class="keyword">const</span> <span class="keyword">int</span> j = <span class="number">1</span>;</div><div class="line">f (i);   <span class="comment">// P = const T,  deduced P is T.</span></div><div class="line">	  <span class="comment">// A = const int, transformed A is int (Rule 1.3)</span></div><div class="line">	  <span class="comment">// T -&gt; int  calls:f&lt;int&gt;()</span></div></pre></td></tr></table></figure>
+<h3 id="Rule-3-if-P-is-a-reference-type-the-type-referred-by-P-is-used-for-type-deduction"><a href="#Rule-3-if-P-is-a-reference-type-the-type-referred-by-P-is-used-for-type-deduction" class="headerlink" title="(Rule 3): if P is a reference type, the type referred by P is used for type deduction"></a>(Rule 3): if P is a reference type, the type referred by P is used for type deduction</h3><p>这里reference type包括lvalue reference 和 rvalue reference.<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">void</span> <span class="title">f</span> ( <span class="title">T</span>&amp;);</span></div><div class="line"></div><div class="line"><span class="keyword">const</span> <span class="keyword">int</span> i = <span class="number">1</span>;</div><div class="line">f (i);   <span class="comment">// P = T&amp;,  deduced P is T.  (Rule 3)</span></div><div class="line">	  <span class="comment">// A = const int, no adjustment</span></div><div class="line">	  <span class="comment">// T -&gt; int  calls:f&lt;const int&gt;(const int&amp;)</span></div><div class="line"></div><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">void</span> <span class="title">g</span> ( <span class="title">T</span>&amp;&amp;);</span></div><div class="line"><span class="keyword">const</span> <span class="keyword">int</span> i = <span class="number">1</span>;</div><div class="line">f (i);   <span class="comment">// P = T&amp;&amp;,  deduced P is T.  (Rule 3)</span></div><div class="line">	  <span class="comment">// A = const int, no adjustment</span></div><div class="line">	  <span class="comment">// T -&gt; int  calls:f&lt;const int&gt;(const int&amp;&amp;)</span></div><div class="line"></div><div class="line"><span class="function">Foo &amp;&amp; <span class="title">xvalue</span><span class="params">()</span> </span>&#123; Foo f; <span class="keyword">return</span> <span class="keyword">static_cast</span>&lt;Foo&amp;&amp;&gt;f; &#125;  <span class="comment">//funciton call is an xvalue</span></div><div class="line">fun_rvalue_ref_param ( xvalue () );</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'Foo&amp;&amp;' type, (xvalue), transformed A is Foo</span></div><div class="line">	<span class="comment">//deduces: T is Foo.</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;Foo&gt;(Foo &amp;&amp;)</span></div></pre></td></tr></table></figure></p>
+<p>接着看另一个接近的case<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function">Foo &amp;&amp; <span class="title">xvalue</span><span class="params">()</span> </span>&#123; Foo f; <span class="keyword">return</span> <span class="keyword">static_cast</span>&lt;Foo&amp;&amp;&gt;f; &#125;  <span class="comment">//funciton call is an xvalue</span></div><div class="line">Foo &amp;&amp; ref = xvalue ();</div><div class="line">fun_rvalue_ref_param ( ref  );</div></pre></td></tr></table></figure></p>
+<p>推导结果却不是fun_rvalue_ref_param<foo>(Foo &amp;&amp;) 了， 虽然 ref  和 xvalue的类型(Type)是一样的，但是推导就是不一样，看下一条规则。 </foo></p>
+<h3 id="Rule-4-special-case-P-is-T-amp-amp-and-A-is-an-lvalue"><a href="#Rule-4-special-case-P-is-T-amp-amp-and-A-is-an-lvalue" class="headerlink" title="(Rule 4) special case:  P is T&amp;&amp;, and A is an lvalue"></a>(Rule 4) special case:  P is T&amp;&amp;, and A is an lvalue</h3><blockquote>
+<p>(<a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">N3690</a>, 14.8.2.1/3)  if P is rvalue refernce to a cv-unqualified template parameter and the argument is an lvalue, the type “lvalue reference to A” is used in place of A for type deduction (special case)</p>
+</blockquote>
+<p>如果模板参数P是T或者T&amp;, 那么类型推导只需要关注P/A的类型即可。 但是当P 为 T&amp;&amp;时，则还涉及expresion category taxonomy。类型推导不仅仅关注P/A的类型，还要关注A 这个expression的category是lvalue 还是xvalue,  pvalue.<br>这里多举几个例子，涉及了几个推导规则。每一个都有详细的推导过程。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div></pre></td><td class="code"><pre><div class="line"><span class="function">Foo &amp;&amp; <span class="title">rvalue_ref</span> <span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo (); &#125;</div><div class="line"><span class="function"><span class="keyword">const</span> Foo&amp;&amp; <span class="title">const_rvalue_ref</span> <span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo (); &#125;</div><div class="line"></div><div class="line"><span class="comment">//universal</span></div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">fun_rvalue_ref_param</span> <span class="params">(T&amp;&amp; val)</span> </span>&#123; &#125;;</div><div class="line"></div><div class="line"><span class="keyword">int</span> main &#123;</div><div class="line"></div><div class="line">	<span class="keyword">int</span> int_lvalue_arg = <span class="number">2</span>;</div><div class="line">	<span class="keyword">const</span> <span class="keyword">int</span> int_const_lvalue_arg = <span class="number">1</span>;</div><div class="line"></div><div class="line">	<span class="keyword">int</span>&amp; int_lvalue_ref_arg = int_lvalue_arg;</div><div class="line">	<span class="keyword">const</span> <span class="keyword">int</span>&amp; int_const_lvalue_ref_arg = int_const_lvalue_arg;</div><div class="line"></div><div class="line">	fun_rvalue_ref_param (int_lvalue_arg);</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T. (Rule 3)</span></div><div class="line">	<span class="comment">//A is 'int' type, lvalue, transformed A is 'int&amp;' (rule 4, special case)</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param &lt;int&amp;&gt; (int&amp;).</span></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (int_const_lvalue_arg);</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'const int' type, lvalue, (special case), transformed A is 'const int &amp;'</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param &lt;const int &amp;&gt; (const int &amp;)</span></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (int_lvalue_ref_arg);</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'int&amp;' type, lvalue, (special case)</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param &lt;int &amp;&gt; (int &amp;)</span></div><div class="line"></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (int_const_lvalue_ref_arg);</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'const int&amp;' type, lvalue, (special case)</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param &lt;const int &amp;&gt; (const int &amp;)</span></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (<span class="number">3</span>);  <span class="comment">//rvalue.  build in</span></div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'int', rvalue, no adjustment. transformed A is int</span></div><div class="line">	<span class="comment">//deduces: T is int.</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;int&gt;(int &amp;&amp;)</span></div><div class="line"></div><div class="line">	fun_rvalue_ref_param ( Foo() );</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'Foo' type, rvalue (pvalue), no adjustment. transformed A is Foo</span></div><div class="line">	<span class="comment">//deduces: T is Foo.</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;Foo&gt;(Foo &amp;&amp;)</span></div><div class="line"></div><div class="line">	Foo&amp;&amp; foo_rvalue_ref_arg = Foo();</div><div class="line">	<span class="keyword">const</span> Foo&amp;&amp; foo_const_rvalue_ref_arg = Foo();</div><div class="line"></div><div class="line">	fun_rvalue_ref_param (foo_rvalue_ref_arg);</div><div class="line">	<span class="comment">//A's type is rvalue reference, it is a named reference, so it is an lvalue. special case!</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;Foo&amp;&gt;(Foo &amp;)</span></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (foo_const_rvalue_ref_arg);</div><div class="line">	<span class="comment">//A is lvalue,  special case</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;Foo const &amp;&gt;(Foo const &amp;)</span></div><div class="line"></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (rvalue_ref());</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'Foo&amp;&amp;' type, (xvalue, not a lvalue), transformed A is Foo</span></div><div class="line">	<span class="comment">//deduces: T is Foo.</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;Foo&gt;(Foo &amp;&amp;)</span></div><div class="line"></div><div class="line"></div><div class="line">	fun_rvalue_ref_param (const_rvalue_ref());</div><div class="line">	<span class="comment">//P is 'T&amp;&amp;' type, deduced P is T.</span></div><div class="line">	<span class="comment">//A is 'const Foo&amp;&amp;' type, (xvalue, not a lvalue), transformed A is const Foo</span></div><div class="line">	<span class="comment">//deduces: T is Foo.</span></div><div class="line">	<span class="comment">//calls: fun_rvalue_ref_param&lt;Foo&gt;(Foo &amp;&amp;)</span></div><div class="line"></div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>更详细的各种情况的例子，可以看<a href="https://github.com/kexianda/test/blob/master/cpp11/forward.cpp" target="_blank" rel="external">这里</a></p>
+<h3 id="Rule-5-几个deduced-A和tranformed-A不一致的规则"><a href="#Rule-5-几个deduced-A和tranformed-A不一致的规则" class="headerlink" title="(Rule 5) 几个deduced A和tranformed A不一致的规则"></a>(Rule 5) 几个deduced A和tranformed A不一致的规则</h3><blockquote>
+<p>(rule 5): In general, the deduction process attempts to find template argument values that will make the deduced A<br>identical to A (after the type A is transformed as described above). However, there are three cases that allow<br>a difference:<br>—    (5.1) — If the original P is a reference type, the deduced A (i.e., the type referred to by the reference) can be more cv-qualified than the transformed A.<br>—    (5.2) — The transformed A can be another pointer or pointer to member type that can be converted to the<br>             deduced A via a qualification conversion (4.4).<br>—    (5.3) — If P is a class and P has the form simple-template-id, then the transformed A can be a derived class of<br>             the deduced A. Likewise, if P is a pointer to a class of the form simple-template-id, the transformed A<br>             can be a pointer to a derived class pointed to by the deduced A.</p>
+</blockquote>
+<p>(5.1)<br>如果P是reference type, deduced A 可以比transformed A多出 cv-qualified。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">f1</span><span class="params">(<span class="keyword">const</span> T&amp; t)</span></span>;</div><div class="line"><span class="keyword">bool</span> a = <span class="literal">false</span>;</div><div class="line">f1(a); <span class="comment">// P=const T&amp;, adjusted to const T, A=bool, </span></div><div class="line">       <span class="comment">// deduced T = bool, deduced A = const bool</span></div><div class="line">       <span class="comment">// deduced A is more cv-qualified than A</span></div></pre></td></tr></table></figure></p>
+<p>(5.2)<br>和(5.1)类似，是指针或者类的成员的情况。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">(<span class="keyword">const</span> T*)</span></span>;</div><div class="line"><span class="keyword">int</span>* p;</div><div class="line">f(p); <span class="comment">// P=T, A=int*</span></div><div class="line">      <span class="comment">// deduces T=int, deduced A = const int*</span></div><div class="line">      <span class="comment">// qualification conversion applies (from int* to const int*)</span></div></pre></td></tr></table></figure></p>
+<p>(5.3)<br>如果P是simple-template-id的形式(template-name &lt; template-argument-listopt&gt;)，可以有类继承关系。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">struct</span> <span class="title">B</span> &#123;</span> &#125;;</div><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">struct</span> <span class="title">D</span> :</span> <span class="keyword">public</span> B&lt;T&gt; &#123;&#125;;</div><div class="line"> </div><div class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">T</span>&gt; <span class="title">void</span> <span class="title">f</span>(<span class="title">B</span>&lt;T&gt;&amp;)&#123;</span>&#125;</div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123;</div><div class="line">    D&lt;<span class="keyword">int</span>&gt; d;</div><div class="line">    f(d);  <span class="comment">// P = B&lt;T&gt;&amp;, adjusted P = B&lt;T&gt; (a simple-template-id)</span></div><div class="line">           <span class="comment">// A = D&lt;int&gt;</span></div><div class="line">           <span class="comment">// deduced T = int, deduced A = B&lt;int&gt;</span></div><div class="line">           <span class="comment">// A is derived from deduced A</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><br></p>
+<h2 id="Non-deduced-contexts"><a href="#Non-deduced-contexts" class="headerlink" title="Non-deduced contexts"></a>Non-deduced contexts</h2><p>如下情况，P不参与template argument deduction。</p>
+<p>1) The nested-name-specifier (everything to the left of the scope resolution operator ::) of a type that was specified using a qualified-id.<br>在 操作符::左边的T不参与deduction，这个规则是理解std::forward实现的关键点之一。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// the identity template, often used to exclude specific arguments from deduction</span></div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">struct</span> <span class="title">identity</span> &#123;</span> <span class="keyword">typedef</span> T type; &#125;;</div><div class="line"> </div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">bad</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;T&gt; x, T value = <span class="number">1</span>)</span></span>;</div><div class="line"> </div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">good</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;T&gt; x, <span class="keyword">typename</span> identity&lt;T&gt;::type value = <span class="number">1</span>)</span></span>;</div><div class="line"> </div><div class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="keyword">complex</span>&lt;<span class="keyword">double</span>&gt;&gt; x;</div><div class="line">bad(x, <span class="number">1.2</span>); <span class="comment">// P1 = std::vector&lt;T&gt;, A1 = std::vector&lt;std::complex&lt;double&gt;&gt;</span></div><div class="line">             <span class="comment">// P1/A1 deduction determines T = std::complex&lt;double&gt;</span></div><div class="line">             <span class="comment">// P2 = T, A2 = double</span></div><div class="line">             <span class="comment">// P2/A2 deduction determines T = double -- Error</span></div><div class="line">good(x, <span class="number">1.2</span>); <span class="comment">// P1/A1 deduces T = std::complex&lt;double&gt;</span></div><div class="line">              <span class="comment">// P2 = identity&lt;T&gt;::type, T is to the left of ::, non-deduced</span></div></pre></td></tr></table></figure></p>
+<p>2) The expression of a decltype-specifier.<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">template&lt;typename T&gt; void f(decltype(*std::declval&lt;T&gt;()) arg);</div><div class="line">int n; f&lt;int*&gt;(n); // P = decltype(*declval&lt;T&gt;()), A=int. T is not deducible (since C++14)</div></pre></td></tr></table></figure></p>
+<p>3) A template parameter used in the parameter type of a function parameter that has a default argument that is being used in the call for which argument deduction is being done<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">template&lt;typename T, typename F&gt;</div><div class="line">void f(const std::vector&lt;T&gt; &amp;arr, const F&amp; comp = std::less&lt;T&gt;());</div><div class="line">std::vector&lt;std::string&gt; arr(3);</div><div class="line">f(arr); // P1 = const std::vector&lt;T&gt; &amp;, A1=std::vector&lt;std::string&gt; lvalue,</div><div class="line">        // P1/A1 deduces T = std::string</div><div class="line">        // P2 = non-deduced context for F (template parameter) used in the</div><div class="line">        // parameter type const F&amp; of the function parameter comp,</div><div class="line">        // that has a default argument that is being used in the call f(arr)</div></pre></td></tr></table></figure></p>
+<p>还有其他case，不太常用，这里不提。可参考<a href="http://en.cppreference.com/w/cpp/language/template_argument_deduction" target="_blank" rel="external">文档</a></p>
+<p>注：</p>
+<ol>
+<li><a href="http://isocpp.org/files/papers/N3690.pdf" target="_blank" rel="external">标准链接</a>是草稿,只有微小差别，可以去isocpp.org找最新版.</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/技术/">技术</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/C/">C++</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2014/11/25/template_argument_deduction/" data-title="template argument deduction" data-url="http://kexianda.github.io/2014/11/25/template_argument_deduction/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>5</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>1</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>2</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
