@@ -3,18 +3,15 @@
 <head>
   <meta charset="utf-8">
   
-  <title>沉重的肉身(之二) | 柯贤达</title>
+  <title>基础知识小结 | 柯贤达</title>
   <meta name="author" content="柯贤达 powered by hexo">
   
-  <meta name="description" content="天热睡不着，读书降温。
-摘抄刘小枫的小tips：
-一：现世生命的时间是秋天的道路，让人觉得满目凄凉。幸福是秋天道路上的阳光，给干枯树叶带来可以渴望和想象的生机。一个人必须知道什么是自己可得的幸福。如果既觉得一种生活不可忍受，又觉得另一种生活不可企及，就是一个人对幸福的想象太过分了。
-二：若没有对某种">
+  <meta name="description" content="转几个写得深入浅出的基础知识文章(有空再更新)：">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="沉重的肉身(之二)"/>
+  <meta property="og:title" content="基础知识小结"/>
   <meta property="og:site_name" content="柯贤达"/>
 
   
@@ -61,21 +58,28 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2008-08-12T16:00:00.000Z"><a href="/2008/08/13/沉重的肉-二/">2008-08-13</a></time>
+        <time datetime="2017-04-30T16:00:00.000Z"><a href="/2017/05/01/基础知识小结/">2017-05-01</a></time>
       
       
   
-    <h1 class="title">沉重的肉身(之二)</h1>
+    <h1 class="title">基础知识小结</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>天热睡不着，读书降温。</p>
-<p>摘抄刘小枫的小tips：</p>
-<p>一：<br>现世生命的时间是秋天的道路，让人觉得满目凄凉。幸福是秋天道路上的阳光，给干枯树叶带来可以渴望和想象的生机。一个人必须知道什么是自己可得的幸福。如果既觉得一种生活不可忍受，又觉得另一种生活不可企及，就是一个人对幸福的想象太过分了。</p>
-<p>二：<br>若没有对某种不可摧毁的东西持续不断的信仰，便不能活下去，而无论这种不可摧毁的东西还是这种信仰都可能是长期隐匿的。这种隐匿的表达可能性便是相信一个自己的上帝.</p>
-<p>三：<br>有些问题我们无法回避,除非我们生来就不受其约束。</p>
+        <p>转几个写得深入浅出的基础知识文章(有空再更新)：<br><a id="more"></a></p>
+<h3 id="容器基础"><a href="#容器基础" class="headerlink" title="容器基础"></a>容器基础</h3><p>左耳朵耗子的“马桶文章”系列:</p>
+<ul>
+<li>进程,用户，网络等等的隔离 linux namespace(<a href="http://coolshell.cn/articles/17010.html" target="_blank" rel="external">上</a>, <a href="http://coolshell.cn/articles/17029.html" target="_blank" rel="external">下</a>)</li>
+<li>硬件资源的控制 <a href="http://coolshell.cn/articles/17049.html" target="_blank" rel="external">cgroup</a></li>
+<li><a href="http://coolshell.cn/articles/17061.html" target="_blank" rel="external">AUFS/UnionFS</a>, <a href="http://www.dockone.io/article/1511" target="_blank" rel="external">overlay</a>. 帮助理解docker的分层镜像</li>
+</ul>
+<h3 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h3><p>用NIO/Netty必然要了解网络编程的IO多路复用, 对select/poll/epoll介绍太多了，这里转个：<a href="http://www.cnblogs.com/apprentice89/p/3234677.html" target="_blank" rel="external">epoll源码分析</a><br>很简洁的小结：</p>
+<blockquote>
+<p>1.执行epoll_create时，创建了红黑树和就绪list链表。<br>2.执行epoll_ctl时，如果增加fd（socket），则检查在红黑树中是否存在，存在立即返回，不存在则添加到红黑树上，然后向内核注册回调函数，用于当中断事件来临时向准备就绪list链表中插入数据。<br>3.执行epoll_wait时立刻返回准备就绪链表里的数据即可。</p>
+</blockquote>
+<h3 id="分布式"><a href="#分布式" class="headerlink" title="分布式"></a>分布式</h3><p>paxos 论文, <a href="http://video.tudou.com/v/XMTI4NTUxNzMwNA==.html" target="_blank" rel="external">知行学社的视频</a>值得推荐</p>
 
       
     </div>
@@ -84,13 +88,13 @@
         
   
   <div class="categories">
-    <a href="/categories/生活/">生活</a>
+    <a href="/categories/技术/">技术</a>
   </div>
 
         
   
   <div class="tags">
-    <a href="/tags/读书/">读书</a>
+    <a href="/tags/HotSpot/">HotSpot</a>
   </div>
 
         
@@ -119,7 +123,7 @@
 
 <section id="comment">
   
-  <div class="ds-thread" data-thread-key="2008/08/13/沉重的肉-二/" data-title="沉重的肉身(之二)" data-url="http://kexianda.github.io/2008/08/13/沉重的肉-二/"></div>
+  <div class="ds-thread" data-thread-key="2017/05/01/基础知识小结/" data-title="基础知识小结" data-url="http://kexianda.github.io/2017/05/01/基础知识小结/"></div>
 
   <script type="text/javascript">
     var duoshuoQuery = {short_name:"kexianda"};
