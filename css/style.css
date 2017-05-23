@@ -371,7 +371,7 @@ article .entry h3 {
 article .entry h4,
 article .entry h5,
 article .entry h6 {
-  font-weight: normal;
+  font-weight: bolder;
 }
 article .entry img,
 article .entry video {
