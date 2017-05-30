@@ -1,0 +1,314 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>由WannaCry蠕虫说说密码学原语 | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后，重要文件被AES算法加密， 而AES的key用RSA算法加密了. 网上各种分析和破解办法，然而没什么用，不能彻底的解决问题. 因为WannaCry的RSA+AES加密套餐，理论上，目前很难破解.密码学是很大的主题，简单扯扯密码学原语(cryptographic primitives).">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="由WannaCry蠕虫说说密码学原语"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2017-05-29T16:00:00.000Z"><a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/">2017-05-30</a></time>
+      
+      
+  
+    <h1 class="title">由WannaCry蠕虫说说密码学原语</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后，重要文件被AES算法加密， 而AES的key用RSA算法加密了. 网上各种分析和破解办法，然而没什么用，不能彻底的解决问题. 因为WannaCry的RSA+AES加密套餐，理论上，目前很难破解.<br>密码学是很大的主题，简单扯扯密码学原语(cryptographic primitives).</p>
+<a id="more"></a>
+<h3 id="1-简单介绍-cryptographic-primitives"><a href="#1-简单介绍-cryptographic-primitives" class="headerlink" title="1. 简单介绍 cryptographic primitives"></a>1. 简单介绍 cryptographic primitives</h3><h4 id="1-1-Symmetric-encryption-Secret-Key"><a href="#1-1-Symmetric-encryption-Secret-Key" class="headerlink" title="1.1 Symmetric encryption (Secret Key)"></a>1.1 Symmetric encryption (Secret Key)</h4><p>对称加密提供Confidentiality.加密方和解密方用同一个key对数据进行加解密.<br>对大量数据加密时，因为非常对称加密算法的性能慢，我们一般用对称加密算法.<br>常见算法有：</p>
+<ul>
+<li>DES(Data Encryption Standard), </li>
+<li>3DES(triple DES)是个变体，在DES基础上来三次加密. </li>
+<li>RC4(Ron Rivest in 1987),</li>
+<li>AES(Advanced Encryption Standard),<br>AES是NIST(US Government’s National Institute of Standards)2000提出的标准，目前的工业标准.</li>
+</ul>
+<h4 id="1-2-Asymmetric-encryption-Public-Key"><a href="#1-2-Asymmetric-encryption-Public-Key" class="headerlink" title="1.2 Asymmetric encryption (Public Key)"></a>1.2 Asymmetric encryption (Public Key)</h4><p>非对称加密一般用作Authentication / Key exchange. 对称加密有个问题是加解密时用同一个key，那么key在发送方和接收方交换时要保证安全，可以用非对称加密算法来加密这个key.比如HTTPS协议，对数据全部用非对称加密性能上不能接受的，所以HTTPS协议在传输的数据用对称加密，客户端和服务器端交换密码时用RSA算法来加密对称加密的密码.<br>常见有:</p>
+<ul>
+<li>RSA (图灵奖加持, 大名鼎鼎),  </li>
+<li>Diffie-Hellman, </li>
+<li>ECC, …</li>
+</ul>
+<h4 id="1-3-Hash-algorithms-gt-Integrity"><a href="#1-3-Hash-algorithms-gt-Integrity" class="headerlink" title="1.3 Hash algorithms  =&gt; Integrity"></a>1.3 Hash algorithms  =&gt; Integrity</h4><p>下载文件时，常常会看到一个md5码，就是对文件hash值，主要时用来检查文件是否完整，没有被篡改.<br>常见的算法有</p>
+<ul>
+<li>MD5 , </li>
+<li>SHA-1, SHA-2,  </li>
+<li>GMAC(a  variant of the GCM) …</li>
+</ul>
+<h4 id="1-4-Authenticated-Encryption-AE-Confidentiality-Integrity"><a href="#1-4-Authenticated-Encryption-AE-Confidentiality-Integrity" class="headerlink" title="1.4 Authenticated Encryption(AE):  Confidentiality  +  Integrity"></a>1.4 Authenticated Encryption(AE):  Confidentiality  +  Integrity</h4><p>AE是一种重要的primitive，提供加密的同时又有完整性检查. 常见的有：</p>
+<ul>
+<li>RC4 + HmacMD5,  </li>
+<li>RC4 + HMAC-SHA-1, </li>
+<li>AES-GCM, …</li>
+</ul>
+<h4 id="1-5-Random-Number-Generator"><a href="#1-5-Random-Number-Generator" class="headerlink" title="1.5 Random Number Generator"></a>1.5 Random Number Generator</h4><ul>
+<li>PRNG(Pseudo-Random Number Generator) </li>
+<li>TRNG(True Random Number Generator)</li>
+</ul>
+<p>Java的Random是个PRNG，给定seed，生成的序列其实是固定的.在生成随机密码时，伪随机的安全强度显然要弱很多.<br>而SecureRandom是安全的.</p>
+<h4 id="1-6-Mode-of-operation"><a href="#1-6-Mode-of-operation" class="headerlink" title="1.6 Mode of operation"></a>1.6 Mode of operation</h4><p>这个概念提一下，用对称加密算法对一个数据块(block, 16bytes)加密时，算法是固定的，相同输入和key，输出是一致的.为了增加安全性，为了混淆加密输出结果，引入各种办法, 就是所谓的CTR, CBC, GCM 等等modes. CTR支持随机读.</p>
+<h3 id="2-怎样选择加密算法"><a href="#2-怎样选择加密算法" class="headerlink" title="2. 怎样选择加密算法"></a>2. 怎样选择加密算法</h3><p>选择加密算法时，考虑安全性和性能，还有依赖的系统的支持程度.<br>当然了，如果像csdn那样明码保存用户名和密码，那么可以避免选择加密算法的麻烦 :-)</p>
+<h4 id="2-1-安全性"><a href="#2-1-安全性" class="headerlink" title="2.1 安全性"></a>2.1 安全性</h4><p>对称加密安全性：</p>
+<ul>
+<li>DES 被废弃，不应该选择使用</li>
+<li>3DES，强度不够，灰常的慢，虽然目前使用的很多，不建议用.</li>
+<li>RC4 以快而出名，使用很多，但Mozilla和Microsoft都建议不用，RFC 7465禁止使用RC4<br>就安全强度而言，对称加密算法最好选择AES.</li>
+</ul>
+<p>references:<br>“Mozilla Security Server Side TLS Recommended Configurations”. Mozilla. Retrieved 2015-01-03.<br>“Security Advisory 2868725: Recommendation to disable RC4”. Microsoft. 12 November 2013   </p>
+<p>hash算法安全性：<br>MD5早被王小云教授给破解， 前不久还听说过用集群破解SHA-1的新闻，随着硬件CPU/GPU/FPGA/ASIC的发展，SHA会越来越不安全.GMAC强度不错，是比较安全的算法.</p>
+<h4 id="2-2-性能"><a href="#2-2-性能" class="headerlink" title="2.2 性能"></a>2.2 性能</h4><p>只看对称加密算法的性能对比：<br>| algo               | throughput   |<br>| —————— | ———— |<br>| 3des               |  14.59 MB/s  |<br>| aes-ctr-128(JDK8)  |  228.98 MB/s |<br>| aes-ctr-128(JDK8)  |  228.98 MB/s |<br>| aes-ctr-128(JDK8)  |  228.98 MB/s |</p>
+<p>可见DES/3DES除了加密强度不够，性能也很差. rc4虽然速度还不多，但是安全性不推荐.<br>JDK8与Commons Crypto的差距在于工程上的实现问题.</p>
+<p>生产随机密码，建议用TRNG,<br>| algo                 | throughput   |<br>| ——————– | —— ——|<br>| SecureRandom(JDK8)   |  14.59 MB/s  |<br>| CryptoRandom(Crypto) |  86.83 MB/s  |</p>
+<h3 id="3-探究-AES-的性能秘密"><a href="#3-探究-AES-的性能秘密" class="headerlink" title="3. 探究 AES 的性能秘密"></a>3. 探究 AES 的性能秘密</h3><p>除了硬件加速，比如x86平台有AESENC指令，Power/ARM上也有硬件加速指令；算法工程实现也会导致很大的性能差距.<br>有空了再写写x86的代码优化，涉及到CPU的cache, pipelining, out of order, SIMD(SSE,AVX)等细节.</p>
+<h3 id="4-其他"><a href="#4-其他" class="headerlink" title="4. 其他"></a>4. 其他</h3><h4 id="4-1-细看AE算法AES-GCM"><a href="#4-1-细看AE算法AES-GCM" class="headerlink" title="4.1 细看AE算法AES-GCM"></a>4.1 细看AE算法AES-GCM</h4><p>HTTPS, SSL/TSL的基础是AE，前面也说了RC4, MD5, SHA等算法安全强度不够.<br>Hanno Böck说:</p>
+<blockquote>
+<p>“If CBC/HMAC and RC4 are bad there’s only one cipher mode left: AES-GCM (Galois/Counter Mode). “</p>
+</blockquote>
+<p>GCM作为安全协议的底层算法可能会应用的更广.</p>
+<p>我看过AES-GCM在OpenSSL, go runtime, Linux kernel的实现, 优化的很好，都是基于<a href="https://crypto.stanford.edu/RealWorldCrypto/slides/gueron.pdf" target="_blank" rel="external">Shay Gueron博士的算法</a>.<br>看下benchmark：</p>
+<table>
+<thead>
+<tr>
+<th>algo</th>
+<th>throughput</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RC4 + HmacMD5(JDK8)</td>
+<td>149.8 MB/s</td>
+</tr>
+<tr>
+<td>RC4 + HmacSHA1(JDK8)</td>
+<td>131.69 MB/s</td>
+</tr>
+<tr>
+<td>AES-GCM(JDK8)</td>
+<td>3.98 MB/s</td>
+</tr>
+<tr>
+<td>AES-GCM(JDK9)</td>
+<td>267.78 MB/s</td>
+</tr>
+<tr>
+<td>AES-GCM(Crypto)</td>
+<td>1196.01 MB/s</td>
+</tr>
+</tbody>
+</table>
+<p>可见：</p>
+<ul>
+<li>AES-GCM性能不比传统的RC4+Hmac差</li>
+<li>AES-GCM在JDK8里性能是个灾难</li>
+<li>AES-GCM在JDK9里用上了硬件加速，PCLMULQDQ指令</li>
+</ul>
+<p>JDK9的实现还是不足够好，我本来想优化这个到HotSpot里去的，做了一半，被砍掉了，忙其他事情去了.</p>
+<p>注意：<br><a href="https://int21.de/slides/berlinsec-gcm/#/" target="_blank" rel="external">NONCE REUSE ISSUES IN TLS</a><br>对GCM也有<a href="https://int21.de/slides/berlinsec-gcm/#/11" target="_blank" rel="external">不同的观点</a></p>
+<h4 id="4-2-吐槽-Java-SASL-API"><a href="#4-2-吐槽-Java-SASL-API" class="headerlink" title="4.2 吐槽 Java SASL API"></a>4.2 吐槽 Java SASL API</h4><p><a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/sasl/sasl-refguide.html" target="_blank" rel="external">Java SASL(Simple Authentication and Security Layer) API</a>,<br>内部实现时，一般是用MD5和3des/rc4来做数据完整性检查和加密的.从安全和性能角度，这算法的选择都不好.而SASL在大数据/分布式领域用的很多…</p>
+<h3 id="5-小广告"><a href="#5-小广告" class="headerlink" title="5. 小广告"></a>5. 小广告</h3><h4 id="5-1-Apache-Commons-Crypto"><a href="#5-1-Apache-Commons-Crypto" class="headerlink" title="5.1 Apache Commons Crypto"></a>5.1 Apache Commons Crypto</h4><p>因为JDK 7/8 不给力，搬Java砖的同志可以考虑用Apache Commons Crypto，工作所在team贡献的项目，又快又好，谁用谁知道:-)</p>
+<h4 id="5-2-JDK9的改进"><a href="#5-2-JDK9的改进" class="headerlink" title="5.2 JDK9的改进"></a>5.2 JDK9的改进</h4><p>HotSpot上AES的实现有改进的地方，提了两patch，由公司的JVM team同事提交进去了<br>JDK-8143925 加了个HotSpot Intrinsic, AES-CTR算法有5~8x的性能提升<br>JDK-8152354 代码上微调，对CPU更友好，AES-CBC得到15%~50%的提升.<br>Java 9今年7月应该可以GA了.</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/技术/">技术</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/HotSpot/">HotSpot</a>, <a href="/tags/密码学原语/">密码学原语</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2017/05/30/由WannaCry蠕虫说说密码学原语/" data-title="由WannaCry蠕虫说说密码学原语" data-url="http://kexianda.github.io/2017/05/30/由WannaCry蠕虫说说密码学原语/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>8</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>3</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/协程/">协程</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>2</small></li>
+  
+    <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+    <li><a href="/tags/高并发/">高并发</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
