@@ -647,6 +647,20 @@ article footer .addthis iframe {
   font: 0.9em/1.6 "Lato", Helvetica Neue, Helvetica, Arial, sans-serif;
   text-shadow: 0 0 1px #fff;
 }
+.entry table {
+  border: 1px solid #000;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+.entry th {
+  border: 1px solid #000;
+  border-collapse: collapse;
+}
+.entry td {
+  border: 1px solid #000;
+  border-collapse: collapse;
+  padding: 1px 8px 1px;
+}
 .entry .gist {
   background: #eee;
   border: 1px solid #ddd;
@@ -713,8 +727,15 @@ figure.highlight pre {
   margin: 0;
 }
 figure.highlight table {
-  margin-top: 0;
+  margin-top: 1;
   border-spacing: 0;
+  border: 0px;
+}
+figure.highlight th {
+  border: 0px solid #000;
+}
+figure.highlight td {
+  border: 0px solid #000;
 }
 figure.highlight .gutter {
   color: #999;
