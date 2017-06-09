@@ -6,7 +6,7 @@
   <title>由WannaCry蠕虫说说密码学原语 | 柯贤达</title>
   <meta name="author" content="柯贤达 powered by hexo">
   
-  <meta name="description" content="WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.由此，简单看下密码学原语(cryptographic primitives).简单评估下JDK里加密算法的性能，如果自己需要加密，怎么选择合适的加密算法?再探究一下AES算法的硬件加速和优化的工程实现。">
+  <meta name="description" content="WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?再探究一下AES算法的硬件加速和优化的工程实现。">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -68,7 +68,7 @@
     </header>
     <div class="entry">
       
-        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，简单看下密码学原语(cryptographic primitives).<br>简单评估下JDK里加密算法的性能，如果自己需要加密，怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br><a id="more"></a></p>
+        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br><a id="more"></a></p>
 <h2 id="1-简单介绍-cryptographic-primitives"><a href="#1-简单介绍-cryptographic-primitives" class="headerlink" title="1. 简单介绍 cryptographic primitives"></a>1. 简单介绍 cryptographic primitives</h2><h3 id="1-1-Symmetric-encryption-Secret-Key"><a href="#1-1-Symmetric-encryption-Secret-Key" class="headerlink" title="1.1 Symmetric encryption (Secret Key)"></a>1.1 Symmetric encryption (Secret Key)</h3><p>对称加密提供Confidentiality. 加密方和解密方用同一个key对数据进行加解密.<br>对大量数据加密时，因为性能，我们一般用对称加密算法.<br>常见算法有：</p>
 <ul>
 <li>DES(Data Encryption Standard),</li>
@@ -186,8 +186,8 @@
 <p>JDK9的实现还是不足够好，我本来想优化这个到HotSpot里去的，做了一半，被砍掉了，忙其他事情去了.</p>
 <p>注意：<br><a href="https://int21.de/slides/berlinsec-gcm/#/" target="_blank" rel="external">NONCE REUSE ISSUES IN TLS</a><br>对GCM也有<a href="https://int21.de/slides/berlinsec-gcm/#/11" target="_blank" rel="external">不同的观点</a></p>
 <h3 id="4-2-吐槽-Java-SASL-API"><a href="#4-2-吐槽-Java-SASL-API" class="headerlink" title="4.2 吐槽 Java SASL API"></a>4.2 吐槽 Java SASL API</h3><p><a href="https://docs.oracle.com/javase/7/docs/technotes/guides/security/sasl/sasl-refguide.html" target="_blank" rel="external">Java SASL(Simple Authentication and Security Layer) API</a>,<br>内部实现时，一般是用MD5和3des/rc4来做数据完整性检查和加密的.从安全和性能角度，这算法的选择都不好.而SASL在大数据/分布式领域用的很多…</p>
-<h2 id="5-小广告"><a href="#5-小广告" class="headerlink" title="5. 小广告"></a>5. 小广告</h2><h3 id="5-1-Apache-Commons-Crypto"><a href="#5-1-Apache-Commons-Crypto" class="headerlink" title="5.1 Apache Commons Crypto"></a>5.1 Apache Commons Crypto</h3><p>因为JDK 7/8 的Crypto不给力，搬Java砖的同志可以考虑用Apache Commons Crypto，工作所在team贡献的项目，又快又好，谁用谁知道:-)</p>
-<h3 id="5-2-JDK9的改进"><a href="#5-2-JDK9的改进" class="headerlink" title="5.2 JDK9的改进"></a>5.2 JDK9的改进</h3><p>HotSpot上AES的实现有改进的地方，我提了两patch(<a href="https://bugs.openjdk.java.net/browse/JDK-8143925" target="_blank" rel="external">JDK-8143925</a>和<a href="https://bugs.openjdk.java.net/browse/JDK-JDK-8152354" target="_blank" rel="external">JDK-8152354</a>)到HotSpot(Java 9)，由公司的JVM team同事提交进去了.<br>一是加了个HotSpot Intrinsic, AES-CTR算法有5~8x的性能提升.  二是代码上微调，对CPU更友好，AES-CBC得到15%~50%的提升.<br>Java 9今年7月应该可以GA了. Java 9的Crypto库性能已经接近OpenSSL了.</p>
+<h2 id="5-小广告"><a href="#5-小广告" class="headerlink" title="5. 小广告"></a>5. 小广告</h2><h3 id="5-1-Apache-Commons-Crypto"><a href="#5-1-Apache-Commons-Crypto" class="headerlink" title="5.1 Apache Commons Crypto"></a>5.1 Apache Commons Crypto</h3><p>因为JDK 7/8 的Crypto不给力，搬Java砖的同志需要加密时, 如果性能需考量, 可以考虑用Apache Commons Crypto，工作所在team贡献的项目，又快又好，谁用谁知道:-)<br>我同事在apacheCon上有个<a href="https://www.youtube.com/watch?v=Vwp8oHnut3k" target="_blank" rel="external">演讲</a></p>
+<h3 id="5-2-JDK9的改进"><a href="#5-2-JDK9的改进" class="headerlink" title="5.2 JDK9的改进"></a>5.2 JDK9的改进</h3><p>还好Java 9上AES的实现有改进. Java 9过几个与就要GA了. 我不是专业做JVM开发的, 工作需要, 提了两patch(<a href="https://bugs.openjdk.java.net/browse/JDK-8143925" target="_blank" rel="external">JDK-8143925</a>和<a href="https://bugs.openjdk.java.net/browse/JDK-8152354" target="_blank" rel="external">JDK-8152354</a>)到HotSpot，由公司的JVM team同事提交进去了.<br>一个是AES-CTR算法有5~8x的性能提升.  二是AES-CBC算法得到15%~50%的提升, 性能已经接近OpenSSL了. 代码能为上亿台机器省一点点电能, 也是很爽的事情.</p>
 
       
     </div>

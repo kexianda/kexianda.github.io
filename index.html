@@ -67,7 +67,7 @@
     </header>
     <div class="entry">
       
-        <p>一般不想写环境配置类文章, 但调试HotSpot的环境配置的资料确实比较少. 我不是工作在JVM上专家, 只是玩票性质提交过patch, 或者有时候好奇Java的实现, 需要深入一下JVM看看具体的实现.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 宇宙第一IDE的Visual Studio应该很好使.<br>这里记录整理一下Ubuntu上开发环境配置.<br>
+        <p>调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)<br>
       
     </div>
     <footer>
@@ -103,7 +103,7 @@
     </header>
     <div class="entry">
       
-        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，简单看下密码学原语(cryptographic primitives).<br>简单评估下JDK里加密算法的性能，如果自己需要加密，怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br>
+        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br>
       
     </div>
     <footer>
@@ -139,7 +139,7 @@
     </header>
     <div class="entry">
       
-        <p>看了篇<a href="http://www.infoq.com/cn/articles/CplusStyleCorourtine-At-Wechat">微信后台异步化改造的文章</a>, libco协程库加上epoll处理高并发. 企鹅厂是C++控, 后台用C++. 微信这种高并发, 见识了协程的用途. C/C++语言不提供协程的语义. 听过有人用setjmp/longjmp或ucontext实现协程, 一直对这种用户态切换没细看, 估计和操作系统切换进程类似, tss保存起来. 好奇心起, 趁机了解一下协程的实现, 顺便整理一下进程/线程/协程的概念.<br>
+        <p>看了篇<a href="http://www.infoq.com/cn/articles/CplusStyleCorourtine-At-Wechat">微信后台异步化改造的文章</a>, libco协程库加上epoll处理高并发. 企鹅厂是C++控, 后台用C++. 微信这种高并发, 见识了协程的用途. C/C++语言不提供协程的语义. 听过有人用setjmp/longjmp或ucontext实现协程, 一直对这种用户态切换没细看, 估计和操作系统切换进程类似, tss保存起来. 好奇心起, 趁机了解一下协程的实现, 同时整理一下进程/线程的原理.<br>
       
     </div>
     <footer>
@@ -211,7 +211,7 @@
     </header>
     <div class="entry">
       
-        <p>近期有人和我讨论java volatile, 人老脑子懵，我还volatile不是atomic的云云，神经还搭在C++ 的volatile坑里没恢复过来, 过来一阵才反应过来. 就此契机,整理一下.<br>几年前曾给同事做过一个java内存模型的knowledge sharing, 摘取部分内容放这, 简单的回顾下内存模型, 然后从JVM hotSpot实现的角度来仔细看看volatile的语义.<br>
+        <p>近期有人和我讨论java volatile, 人老脑子懵，我还volatile不是atomic的云云，神经还搭在C++ 的volatile坑里没恢复过来, 过来一阵才反应过来, 这是Java的volatile.<br>几年前曾给同事做过一个java内存模型的knowledge sharing, 摘取部分内容放这, 简单的回顾下内存模型, 然后从JVM hotSpot实现的角度来仔细看看volatile的语义. 就此契机,整理出来.<br>
       
     </div>
     <footer>

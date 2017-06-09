@@ -6,7 +6,7 @@
   <title>Hacking on HotSpot (1) 环境设置和调试 | 柯贤达</title>
   <meta name="author" content="柯贤达 powered by hexo">
   
-  <meta name="description" content="一般不想写环境配置类文章, 但调试HotSpot的环境配置的资料确实比较少. 我不是工作在JVM上专家, 只是玩票性质提交过patch, 或者有时候好奇Java的实现, 需要深入一下JVM看看具体的实现.有人写过Mac上配置, Windows的环境没查到,我也没弄过, 宇宙第一IDE的Visual Studio应该很好使.这里记录整理一下Ubuntu上开发环境配置.">
+  <meta name="description" content="调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -68,8 +68,8 @@
     </header>
     <div class="entry">
       
-        <p>一般不想写环境配置类文章, 但调试HotSpot的环境配置的资料确实比较少. 我不是工作在JVM上专家, 只是玩票性质提交过patch, 或者有时候好奇Java的实现, 需要深入一下JVM看看具体的实现.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 宇宙第一IDE的Visual Studio应该很好使.<br>这里记录整理一下Ubuntu上开发环境配置.<br><a id="more"></a></p>
-<h2 id="0-prerequisites"><a href="#0-prerequisites" class="headerlink" title="0. prerequisites"></a>0. prerequisites</h2><h4 id="mercurial"><a href="#mercurial" class="headerlink" title="mercurial"></a>mercurial</h4><p>环境是Ubuntu 1604. 首先安装OpenJDK用的SCM工具mercurial<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install mercurial</div></pre></td></tr></table></figure></p>
+        <p>调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)<br><a id="more"></a></p>
+<h2 id="0-prerequisites"><a href="#0-prerequisites" class="headerlink" title="0. prerequisites"></a>0. prerequisites</h2><h4 id="mercurial"><a href="#mercurial" class="headerlink" title="mercurial"></a>mercurial</h4><p>OS环境我选Ubuntu 1604. 首先安装OpenJDK用的SCM工具mercurial<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install mercurial</div></pre></td></tr></table></figure></p>
 <p>再安装个mercurial pluggin<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mkdir ~/jdk/tools &amp;&amp; cd ~/jdk/tools  # 目录随意...</div><div class="line">wget http://hg.openjdk.java.net/code-tools/trees/raw-file/tip/trees.py</div></pre></td></tr></table></figure></p>
 <p>vim ~/.hgrc<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[extentions]</div><div class="line">Trees= ~/jdk/tools/trees.py</div></pre></td></tr></table></figure></p>
 <h4 id="clone-repo"><a href="#clone-repo" class="headerlink" title="clone repo"></a>clone repo</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hg tclone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</div></pre></td></tr></table></figure>
