@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>instanceOf在多核环境中的并发问题 | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="同事分享了通过profiling发现的高并发性能问题, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:
+
+Scala Scalability Issue
+instanceOf在HotSpot中的实现和优化
+CPU Cache thrashing / NUMA  
+
+从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思, 对写高并发高性能代码有启发, 我把涉及到的知识拓展和小结一下.">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="instanceOf在多核环境中的并发问题"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2017-06-09T14:23:56.000Z"><a href="/2017/06/09/instanceOf在多核环境中的并发问题/">2017-06-09</a></time>
+      
+      
+  
+    <h1 class="title">instanceOf在多核环境中的并发问题</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>同事分享了通过profiling发现的高并发性能问题, <a href="https://www.slideshare.net/SparkSummit/accelerating-spark-genome-sequencing-in-clouda-data-driven-approach-case-studies-and-beyond-spark-summit-east-talk-by-lucy-lu-and-eric-kaczmarek" target="_blank" rel="external">一个Spark的性能问题</a> 和<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787" target="_blank" rel="external">一个Cassandra的性能问题</a>, 涉及到:</p>
+<ul>
+<li>Scala Scalability Issue</li>
+<li>instanceOf在HotSpot中的实现和优化</li>
+<li>CPU Cache thrashing / NUMA  </li>
+</ul>
+<p>从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思, 对写高并发高性能代码有启发, 我把涉及到的知识拓展和小结一下.<br><a id="more"></a></p>
+<h2 id="1-CPU-Cache-amp-Thrashing-amp-NUMA"><a href="#1-CPU-Cache-amp-Thrashing-amp-NUMA" class="headerlink" title="1. CPU Cache &amp; Thrashing &amp; NUMA"></a>1. CPU Cache &amp; Thrashing &amp; NUMA</h2><h4 id="Intel-x86-CPU-Cache"><a href="#Intel-x86-CPU-Cache" class="headerlink" title="Intel x86 CPU Cache"></a>Intel x86 CPU Cache</h4><p>首先看看现代的x86 CPU访问不同layer数据的时间, 先有个感性认识.  </p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">存储空间</th>
+<th style="text-align:center">时间成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Registers/buffers</td>
+<td style="text-align:center">~ 1 cycle &lt; 1ns</td>
+</tr>
+<tr>
+<td style="text-align:center">L1 cache</td>
+<td style="text-align:center">~ 3 cycles  ~1ns</td>
+</tr>
+<tr>
+<td style="text-align:center">L2 cache</td>
+<td style="text-align:center">~ 12 cycles  ~3ns</td>
+</tr>
+<tr>
+<td style="text-align:center">L3 cache</td>
+<td style="text-align:center">~ 38 cycles &lt; 12ns</td>
+</tr>
+<tr>
+<td style="text-align:center">QPI*</td>
+<td style="text-align:center">~40 ns</td>
+</tr>
+<tr>
+<td style="text-align:center">DRAM</td>
+<td style="text-align:center">~65 ns</td>
+</tr>
+</tbody>
+</table>
+<p>QPI(Intel QuickPath Interconnect)是用来链接不同处理器. 这里有篇文章<a href="http://www.drdobbs.com/go-parallel/article/print?articleId=222301437" target="_blank" rel="external">A Deeper Look Inside Intel QuickPath Interconnect</a>), 处理器间cache coherence通过QPI来处理. 随着core/socket(processor)的增加, cache coherence更加复杂和成本也在上升.</p>
+<p>访问memory和cache之间存在很大的差距, 如果没有cache, CPU快也没有用只能干等. 一般而言, 现在的x86 CPU有非常好cache hit rate(90%+), 可参考<a href="https://www.extremetech.com/extreme/188776-how-l1-and-l2-cpu-caches-work-and-why-theyre-an-essential-part-of-modern-chips" target="_blank" rel="external">这篇文章</a>.<br>特殊情况下, 数据被load到cache, 又迅速的被丢弃, 会导致效率低下(<a href="https://pomozok.wordpress.com/2011/11/29/cpu-cache-thrashing/" target="_blank" rel="external">CPU cache thrashing</a>). 非常类似操作系统中内存管理中的Thrashing概念. cahce line不停换进换出.<br>一个例子演示下:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;SIZE; i++) &#123;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; i &lt; SIZE; j++) &#123;</div><div class="line">        <span class="comment">//array[i][j] = i * j;  //</span></div><div class="line">        <span class="built_in">array</span>[j][i] = i * j;  <span class="comment">// cache thrashing.</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h4 id="NUMA"><a href="#NUMA" class="headerlink" title="NUMA"></a>NUMA</h4><p>关于NUMA, HP linux kernel team有个slides(<a href="http://events.linuxfoundation.org/sites/events/files/slides/Optimizing%20Application%20Performance%20in%20Large%20Multi-core%20Systems_0.pdf" target="_blank" rel="external">Optimizing Application Performance in Large Multi-core Systems</a>).</p>
+<p>另, <a href="http://cenalulu.github.io/linux/numa/" target="_blank" rel="external">这篇</a>也可以参考.</p>
+<h2 id="3-instanceOf-在HotSpot中的优化和问题"><a href="#3-instanceOf-在HotSpot中的优化和问题" class="headerlink" title="3. instanceOf 在HotSpot中的优化和问题"></a>3. instanceOf 在HotSpot中的优化和问题</h2><h3 id="3-1-instanceOf的语义和实现"><a href="#3-1-instanceOf的语义和实现" class="headerlink" title="3.1 instanceOf的语义和实现"></a>3.1 instanceOf的语义和实现</h3><p><a href="https://www.zhihu.com/people/rednaxelafx/" target="_blank" rel="external">RednaxelaFX</a>在知乎有个很好的<a href="https://www.zhihu.com/question/21574535" target="_blank" rel="external">回答</a>, R大由浅入深, 然后深入得只能JVM开发者才能懂:-)</p>
+<blockquote>
+<p>作者：RednaxelaFX<br>链接：<a href="https://www.zhihu.com/question/21574535/answer/18998914" target="_blank" rel="external">https://www.zhihu.com/question/21574535/answer/18998914</a><br>来源：知乎<br>著作权归作者所有。</p>
+<p>简单来说，优化的主要思路就是把Java语言的特点考虑进来：由于Java的类所继承的超类与所实现的接口都不会在运行时改变，整个继承结构是稳定的，某个类型C在继承结构里的“深度”是固定不变的。也就是说从某个类出发遍历它的super链，总是会遍历到不变的内容。这样我们就可以<strong>把原本要循环遍历super链才可以找到的信息缓存在数组里，并且以特定的下标从这个数组找到我们要的信息</strong>。同时，Java的类继承深度通常不会很深，所以为这个缓存数组选定一个固定的长度就足以优化大部分需要做子类型判断的情况。<strong>HotSpot VM具体使用了长度为8的缓存数组，记录某个类从继承深度0到7的超类。HotSpot把类继承深度在7以内的超类叫做“主要超类型”（primary super），把所有其它超类型（接口、数组相关以及超过深度7的超类）叫做“次要超类型”（secondary super）。对“主要超类型”的子类型判断不需要像Kaffe或JamVM那样沿着super链做遍历，而是直接就能判断子类型关系是否成立。这样，类的继承深度对HotSpot VM做子类型判断的性能影响就变得很小了。对“次要超类型”，则是让每个类型把自己的“次要超类型”混在一起记录在一个数组里，要检查的时候就线性遍历这个数组。</strong>留意到这里把接口类型、数组类型之类的子类型关系都直接记录在同一个数组里了</p>
+</blockquote>
+<p>展示一段代码, 逻辑基本就是R大描述的过程.<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// hotspot/src/share/vm/oops/klass.cpp</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Klass</span> :</span> <span class="keyword">public</span> Metadata &#123;</div><div class="line"></div><div class="line">    <span class="comment">//...</span></div><div class="line"></div><div class="line">    <span class="comment">// Cache of last observed secondary supertype</span></div><div class="line">    Klass*      _secondary_super_cache;</div><div class="line">    <span class="comment">// Array of all secondary supertypes</span></div><div class="line">    Array&lt;Klass*&gt;* _secondary_supers;</div><div class="line">    <span class="comment">// Ordered list of all primary supertypes</span></div><div class="line">    Klass*      _primary_supers[_primary_super_limit];</div><div class="line"></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">is_subtype_of</span><span class="params">(Klass* k)</span> <span class="keyword">const</span> </span>&#123;</div><div class="line">       juint    off = k-&gt;super_check_offset();</div><div class="line">       Klass* sup = *(Klass**)( (address)<span class="keyword">this</span> + off );</div><div class="line">       <span class="keyword">const</span> juint secondary_offset = in_bytes(secondary_super_cache_offset());</div><div class="line">       <span class="keyword">if</span> (sup == k) &#123;</div><div class="line">         <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">       &#125; <span class="keyword">else</span> <span class="keyword">if</span> (off != secondary_offset) &#123;</div><div class="line">         <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">       &#125; <span class="keyword">else</span> &#123;</div><div class="line">         <span class="keyword">return</span> search_secondary_supers(k);</div><div class="line">       &#125;</div><div class="line">     &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">bool</span> Klass::search_secondary_supers(Klass* k) <span class="keyword">const</span> &#123;</div><div class="line">  <span class="comment">// Put some extra logic here out-of-line, before the search proper.</span></div><div class="line">  <span class="comment">// This cuts down the size of the inline method.</span></div><div class="line"></div><div class="line">  <span class="comment">// This is necessary, since I am never in my own secondary_super list.</span></div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span> == k)</div><div class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">  <span class="comment">// Scan the array-of-objects for a match</span></div><div class="line">  <span class="keyword">int</span> cnt = secondary_supers()-&gt;length();</div><div class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; cnt; i++) &#123;</div><div class="line">    <span class="keyword">if</span> (secondary_supers()-&gt;at(i) == k) &#123;</div><div class="line">      ((Klass*)<span class="keyword">this</span>)-&gt;set_secondary_super_cache(k); <span class="comment">// 注意这里, 设置_secondary_super_cache</span></div><div class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h3 id="3-2-instanceOf的并发性能问题"><a href="#3-2-instanceOf的并发性能问题" class="headerlink" title="3.2 instanceOf的并发性能问题"></a>3.2 instanceOf的并发性能问题</h3><p>这里关心的点, 就是HotSpot源码中这个_secondary_super_cache被设置. instanceOf调用时, _secondary_super_cache不停的被设置, 在多核或多CPU高并发环境里.<br>比如下面情况, 有个基础的类class A, instanceOf操作极频繁:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">A instanceOf super1;  // running on processor 1, core 1</div><div class="line">A instanceOf super2;  // running on processor 1, core 2</div><div class="line">A instanceOf super3;  // running on processor 2, core 1</div><div class="line">A instanceOf super4;  // running on processor 2, core 2</div></pre></td></tr></table></figure></p>
+<p>super1被设置到_secondary_super_cache, CPU core把这个值换进到cache. 然而很快被换出了, 因为另外一个core设置新的值super2了. 而各个core/processor需要保持cache coherence, super1的cache line被换出. core/processor个数越多, 并发度越高, cahce line不停换进换出, 相互拖累程度越严重. (有了前三节的介绍, 这个理解起来不难了.)</p>
+<h4 id="Scala-lang"><a href="#Scala-lang" class="headerlink" title="Scala lang"></a>Scala lang</h4><p>Scala集合类的实现里, scala.collection.mutable.Builder.sizeHint()里有类型判断.<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">sizeHint</span></span>(coll: <span class="type">TraversableLike</span>[_, _]) &#123;</div><div class="line">    <span class="keyword">if</span> (coll.isInstanceOf[collection.<span class="type">IndexedSeqLike</span>[_,_]]) &#123;</div><div class="line">      sizeHint(coll.size)</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>这导致了并发性能问题, Scala在最新的2.12.x版本里改了实现, 细节见<a href="https://issues.scala-lang.org/browse/SI-9823" target="_blank" rel="external">JIRA</a>. 在测试环境, 优化后, 有3X的性能差距.</p>
+<h4 id="Cassandra"><a href="#Cassandra" class="headerlink" title="Cassandra"></a>Cassandra</h4><p>Cassandra也有个类似的问题, 见<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787" target="_blank" rel="external">Reduce instanceOf() type checking to improve performance</a></p>
+<p>这两个问题, 分别是在scala/java代码层面修了bug, 或许JVM将来会进一步改进改善这个问题.  </p>
+<p>/// 完</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/HotSpot/">HotSpot</a>, <a href="/tags/并发/">并发</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2017/06/09/instanceOf在多核环境中的并发问题/" data-title="instanceOf在多核环境中的并发问题" data-url="http://kexianda.github.io/2017/06/09/instanceOf在多核环境中的并发问题/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>9</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>5</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/协程/">协程</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>1</small></li>
+  
+    <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
+  
+    <li><a href="/tags/并发/">并发</a><small>2</small></li>
+  
+    <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+    <li><a href="/tags/高并发/">高并发</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
