@@ -116,11 +116,12 @@ CPU Cache thrashing / NUMA
 </tr>
 </tbody>
 </table>
+<p>Barriers can be very expensive (typically 1000s to 10000s of<br>clock cycles).</p>
 <p>QPI(Intel QuickPath Interconnect)是用来链接不同处理器. 这里有篇文章<a href="http://www.drdobbs.com/go-parallel/article/print?articleId=222301437" target="_blank" rel="external">A Deeper Look Inside Intel QuickPath Interconnect</a>), 处理器间cache coherence通过QPI来处理. 随着core/socket(processor)的增加, cache coherence更加复杂和成本也在上升.</p>
 <h4 id="Thrashing"><a href="#Thrashing" class="headerlink" title="Thrashing"></a>Thrashing</h4><p>访问memory和cache之间存在很大的差距, 如果没有cache, CPU快也没有用只能干等. 一般而言, 现在的x86 CPU有非常好cache hit rate(90%+), 可参考<a href="https://www.extremetech.com/extreme/188776-how-l1-and-l2-cpu-caches-work-and-why-theyre-an-essential-part-of-modern-chips" target="_blank" rel="external">这篇文章</a>.<br>特殊情况下, 数据被load到cache, 又迅速的被丢弃, 会导致效率低下(<a href="https://pomozok.wordpress.com/2011/11/29/cpu-cache-thrashing/" target="_blank" rel="external">CPU cache thrashing</a>). 非常类似操作系统中内存管理中的Thrashing概念. cahce line不停换进换出.<br>一个例子演示下:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;SIZE; i++) &#123;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; i &lt; SIZE; j++) &#123;</div><div class="line">        <span class="comment">//array[i][j] = i * j;  //</span></div><div class="line">        <span class="built_in">array</span>[j][i] = i * j;  <span class="comment">// cache thrashing.</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h4 id="NUMA"><a href="#NUMA" class="headerlink" title="NUMA"></a>NUMA</h4><p>关于NUMA, HP linux kernel team有个slides(<a href="http://events.linuxfoundation.org/sites/events/files/slides/Optimizing%20Application%20Performance%20in%20Large%20Multi-core%20Systems_0.pdf" target="_blank" rel="external">Optimizing Application Performance in Large Multi-core Systems</a>).</p>
 <p>另, <a href="http://cenalulu.github.io/linux/numa/" target="_blank" rel="external">这篇</a>也可以参考.</p>
-<h2 id="2-instanceOf-在HotSpot中的优化和问题"><a href="#2-instanceOf-在HotSpot中的优化和问题" class="headerlink" title="2. instanceOf 在HotSpot中的优化和问题"></a>2. instanceOf 在HotSpot中的优化和问题</h2><h3 id="instanceOf的语义和实现"><a href="#instanceOf的语义和实现" class="headerlink" title="instanceOf的语义和实现"></a>instanceOf的语义和实现</h3><p><a href="https://www.zhihu.com/people/rednaxelafx/" target="_blank" rel="external">RednaxelaFX</a>在知乎有个很好的<a href="https://www.zhihu.com/question/21574535" target="_blank" rel="external">回答</a>, R大由浅入深, 然后深入得只能JVM开发者才能懂:-)</p>
+<h2 id="2-instanceOf-在HotSpot中的优化和问题"><a href="#2-instanceOf-在HotSpot中的优化和问题" class="headerlink" title="2. instanceOf 在HotSpot中的优化和问题"></a>2. instanceOf 在HotSpot中的优化和问题</h2><h3 id="instanceOf的语义和实现"><a href="#instanceOf的语义和实现" class="headerlink" title="instanceOf的语义和实现"></a>instanceOf的语义和实现</h3><p><a href="https://www.zhihu.com/people/rednaxelafx/" target="_blank" rel="external">RedaxelaFX</a>在知乎有个很好的<a href="https://www.zhihu.com/question/21574535" target="_blank" rel="external">回答</a>, R大由浅入深, 然后深入得只能JVM开发者才能懂:-)</p>
 <blockquote>
 <p>作者：RednaxelaFX<br>链接：<a href="https://www.zhihu.com/question/21574535/answer/18998914" target="_blank" rel="external">https://www.zhihu.com/question/21574535/answer/18998914</a><br>来源：知乎<br>著作权归作者所有。</p>
 <p>简单来说，优化的主要思路就是把Java语言的特点考虑进来：由于Java的类所继承的超类与所实现的接口都不会在运行时改变，整个继承结构是稳定的，某个类型C在继承结构里的“深度”是固定不变的。也就是说从某个类出发遍历它的super链，总是会遍历到不变的内容。这样我们就可以<strong>把原本要循环遍历super链才可以找到的信息缓存在数组里，并且以特定的下标从这个数组找到我们要的信息</strong>。同时，Java的类继承深度通常不会很深，所以为这个缓存数组选定一个固定的长度就足以优化大部分需要做子类型判断的情况。<strong>HotSpot VM具体使用了长度为8的缓存数组，记录某个类从继承深度0到7的超类。HotSpot把类继承深度在7以内的超类叫做“主要超类型”（primary super），把所有其它超类型（接口、数组相关以及超过深度7的超类）叫做“次要超类型”（secondary super）。对“主要超类型”的子类型判断不需要像Kaffe或JamVM那样沿着super链做遍历，而是直接就能判断子类型关系是否成立。这样，类的继承深度对HotSpot VM做子类型判断的性能影响就变得很小了。对“次要超类型”，则是让每个类型把自己的“次要超类型”混在一起记录在一个数组里，要检查的时候就线性遍历这个数组。</strong>留意到这里把接口类型、数组类型之类的子类型关系都直接记录在同一个数组里了</p>
@@ -201,7 +202,7 @@ CPU Cache thrashing / NUMA
   <h3 class="title">分类</h3>
   <ul class="entry">
   
-    <li><a href="/categories/技术/">技术</a><small>9</small></li>
+    <li><a href="/categories/技术/">技术</a><small>10</small></li>
   
     <li><a href="/categories/生活/">生活</a><small>6</small></li>
   
@@ -226,7 +227,7 @@ CPU Cache thrashing / NUMA
   
     <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
   
-    <li><a href="/tags/并发/">并发</a><small>2</small></li>
+    <li><a href="/tags/并发/">并发</a><small>3</small></li>
   
     <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
   

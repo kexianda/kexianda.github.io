@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8">
   
-  <title>柯贤达</title>
+  <title>理解concurrency系列-引子 | 柯贤达</title>
   <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="引子近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解,">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
+  <meta property="og:title" content="理解concurrency系列-引子"/>
   <meta property="og:site_name" content="柯贤达"/>
 
   
@@ -50,8 +52,7 @@
 </nav>
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">
-  <article class="post">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
   
   <div class="post-content">
     <header>
@@ -61,7 +62,7 @@
       
       
   
-    <h1 class="title"><a href="/2017/07/09/理解concurrency系列-引子/">理解concurrency系列-引子</a></h1>
+    <h1 class="title">理解concurrency系列-引子</h1>
   
 
     </header>
@@ -123,7 +124,34 @@
     <footer>
       
         
+  
+  <div class="categories">
+    <a href="/categories/技术/">技术</a>
+  </div>
+
         
+  
+  <div class="tags">
+    <a href="/tags/并发/">并发</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
       
       <div class="clearfix"></div>
     </footer>
@@ -131,355 +159,25 @@
 </article>
 
 
-
-
-  <article class="post">
+<section id="comment">
   
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-06-09T14:23:56.000Z"><a href="/2017/06/09/instanceOf在多核环境中的并发问题/">2017-06-09</a></time>
-      
-      
+  <div class="ds-thread" data-thread-key="2017/07/09/理解concurrency系列-引子/" data-title="理解concurrency系列-引子" data-url="http://kexianda.github.io/2017/07/09/理解concurrency系列-引子/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
   
-    <h1 class="title"><a href="/2017/06/09/instanceOf在多核环境中的并发问题/">instanceOf在多核环境中的并发问题</a></h1>
-  
+</section>
 
-    </header>
-    <div class="entry">
-      
-        <p>同事分享了通过profiling发现的高并发性能问题, <a href="https://www.slideshare.net/SparkSummit/accelerating-spark-genome-sequencing-in-clouda-data-driven-approach-case-studies-and-beyond-spark-summit-east-talk-by-lucy-lu-and-eric-kaczmarek">一个Spark的性能问题</a> 和<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787">一个Cassandra的性能问题</a>, 涉及到:</p>
-<ul>
-<li>Scala Scalability Issue</li>
-<li>instanceOf在HotSpot中的实现和优化</li>
-<li>CPU Cache thrashing / NUMA  </li>
-</ul>
-<p>从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思, 对写高并发高性能代码有启发, 我把涉及到的知识拓展和小结一下.<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/06/09/instanceOf在多核环境中的并发问题/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-06-02T16:00:00.000Z"><a href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/">2017-06-03</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/">Hacking on HotSpot (1) 环境设置和调试</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-05-29T16:00:00.000Z"><a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/">2017-05-30</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/">由WannaCry蠕虫说说密码学原语</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-05-18T16:00:00.000Z"><a href="/2017/05/19/进程-线程-协程的实现原理/">2017-05-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/05/19/进程-线程-协程的实现原理/">进程/线程/协程的实现原理</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>看了篇<a href="http://www.infoq.com/cn/articles/CplusStyleCorourtine-At-Wechat">微信后台异步化改造的文章</a>, libco协程库加上epoll处理高并发. 企鹅厂是C++控, 后台用C++. 微信这种高并发, 见识了协程的用途. C/C++语言不提供协程的语义. 听过有人用setjmp/longjmp或ucontext实现协程, 一直对这种用户态切换没细看, 估计和操作系统切换进程类似, tss保存起来. 好奇心起, 趁机了解一下协程的实现, 同时整理一下进程/线程的原理.<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/05/19/进程-线程-协程的实现原理/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-04-30T16:00:00.000Z"><a href="/2017/05/01/基础知识小结/">2017-05-01</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/05/01/基础知识小结/">基础知识小结</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>转几个写得深入浅出的基础知识文章(有空再更新)：<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/05/01/基础知识小结/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-04-28T14:51:49.000Z"><a href="/2017/04/28/从HotSpot源码看Java-volatile/">2017-04-28</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/04/28/从HotSpot源码看Java-volatile/">从HotSpot源码看Java volatile</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>几年前曾给同事做过一个java内存模型的knowledge sharing, 摘取部分内容放这, 简单的回顾下内存模型, 然后从JVM hotSpot实现的角度来仔细看看volatile的语义. 就此契机,整理出来.<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/04/28/从HotSpot源码看Java-volatile/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2014-12-27T16:00:00.000Z"><a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/">2014-12-28</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/">Double-checked Locking</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：</p>
-<ol>
-<li>了解CPU的Memory Barriers机制(Paul McKenny的<a href="http://irl.cs.ucla.edu/~yingdi/web/paperreading/whymb.2010.06.07c.pdf">Memory Barriers: a Hardware View for Software Hackers</a>)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。</li>
-<li>然后看Jeff Preshing的<a href="http://preshing.com">blog</a>, 他的帖子深入浅出，写得非常好。</li>
-<li>《C++ Concurrency in action》, 作者是boost thread的作者。讲stl的thread的接口。</li>
-<li>再看看Herb Sutter,Hans Boehm等人的文章。 <a href="http://bartoszmilewski.com">Bartosz Milewski的博客</a>也值得看看.</li>
-</ol>
-<p>double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇<a href="http://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf">paper</a>，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇<a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11">文章</a>讨论这个问题.</p>
-<p>看完大牛们的文章, 一步一步来动手实现一个Singleton，最后用template泛化.</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2014-12-18T16:00:00.000Z"><a href="/2014/12/19/基于库实现多线程的局限/">2014-12-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/12/19/基于库实现多线程的局限/">基于库实现多线程的局限</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近在看C++ Memory Model, 顺便读了Hans-J. Boehm的10年前的paper <a href="http://www.hpl.hp.com/techreports/2004/HPL-2004-209.pdf">Threads Cannot be Implemented as a Library</a>。<br>C++多线程库有很多，但Boehm指出，C++的多线程库大多数情况是OK的，但在有些情况下是有问题的，并列举了三种情况。此外，因库隐藏了底层现实，在追求极致性能的地方使用库有限制。Boehm的结论是：C++必须在语言层面上支持多线性。正因Boehm和Herb Sutter的努力，C++11支持了多线程。</p>
-<p>Boehm大叔以POSIX的规范pthread为例，进行详细的论述，简单总结如下：<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2014/12/19/基于库实现多线程的局限/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2014-11-24T16:00:00.000Z"><a href="/2014/11/25/template_argument_deduction/">2014-11-25</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/25/template_argument_deduction/">template argument deduction</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>C++11加入了rvalue reference的概念后，类型推导规则更加复杂了。微软的Stephan Lavavej在Channel9的Core C++系列中对deduction简单地做了些<a href="http://channel9.msdn.com/Series/C9-Lectures-Stephan-T-Lavavej-Core-C-/Stephan-T-Lavavej-Core-C-2-of-n">介绍</a> ，但并没有深入地讲。我拿<a href="http://isocpp.org/files/papers/N3690.pdf">C++标准</a>研究了一把，发现deduction的规则细节还是比较繁琐的。标准文档的可读性不太好，颇费脑细胞. 相对而言<a href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">cppreference</a>可读性要好一些。这篇主要总结函数调用时的类型推导(Deduction from a function call)和不进行类型推导的几种情况(Non-deduced contexts)</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2014/11/25/template_argument_deduction/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-<nav id="pagination">
-  
-  
-    <a href="/page/2/" class="alignright next">下一页</a>
-  
-  <div class="clearfix"></div>
-</nav></div></div>
+</div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">
