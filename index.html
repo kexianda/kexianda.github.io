@@ -57,6 +57,50 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2017-07-10T13:45:57.000Z"><a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">2017-07-10</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">理解并发系列(1) 由wait/sleep例子开始</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="0-引子"><a href="#0-引子" class="headerlink" title="0. 引子"></a>0. 引子</h2><p>实习生小T同事和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:</p>
+<ul>
+<li>sleep 不会释放锁; 而wait 会释放锁</li>
+<li>wait要先synchronized</li>
+</ul>
+<p>打破砂锅问到底的小T不满意答案,</p>
+<ul>
+<li>啥叫释放锁持有锁? 啥叫阻塞队列</li>
+<li>线程怎么放弃或拿到CPU的时间切片
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2017-07-09T12:28:06.000Z"><a href="/2017/07/09/理解concurrency系列-引子/">2017-07-09</a></time>
       
       
@@ -67,7 +111,7 @@
     </header>
     <div class="entry">
       
-        <h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.<br>要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.</p>
+        <h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.<br>要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.</p>
 <ol>
 <li>概念太多,不同层次的抽象,各个分支, 如何有组织有条理的阐述?  </li>
 </ol>
@@ -77,51 +121,14 @@
 </ol>
 <p>比如对互斥锁信号量等锁的理解: 就是一个状态变量/原子操作,另一个是线程阻塞/唤醒队列的管理,很简单. 但是如果打破砂锅问到底, 可以对细节很深入了解. 比如Java的ReentrantReadWriteLock, 实现里有个sync(用作同步), 需要了解AbstractQueuedSynchronizer类以及primitive LockSupport/UNSAFE的实现. 继续深入, 看去看JVM是如何用pthread_cond_t/pthread_mutex_t等pthread api实现的; 再深入, pthread(glibc的NPTL)又是怎么做的(glibc的代码非常非常的难读). 继续没完没了, 再深入就需要理解NPTL的基础即Linux系统调用futex, 再深入就看futex在内核是怎样实现的. 也许没有必要关注所有细节, 但了解各个层次实现的核心逻辑还是很有好处的.<br>还有, 比如用java的线程池ThreadPoolExecute, 如何处理InterruptedException, 以及为什么要这么处理, interupt到底怎么回事, 在JVM层怎么实现?操作系统里怎么回事?</p>
 <p>要把这些知识整理得深入浅出是要水平的,很花精力和时间. 我非常认同左耳朵耗子说的, 技术文章要写得在马桶上拉屎时都能看懂才是好文章:-) 但这其实要求很高,要有深入理解和很好的有条理的表达. 而我水平有限, 有些技术点研究也不够深入, 精力和时间也不够,也不知道能写的怎么样,能写多少, 不管怎样, 先列个提纲, 以后有空慢慢写, 不是很清楚的细节, 可以边写边研究.</p>
-<h2 id="大纲"><a href="#大纲" class="headerlink" title="大纲"></a>大纲</h2><p>我个人理解, 并发的核心:</p>
-<ol>
-<li>一个是有序性，可见性，原子性. 从底层角度, 指令重排和内存屏障,CPU的内存模型的理解.</li>
-<li>另一个是线程的管理, 阻塞, 唤醒, 相关的线程队列管理(内核空间或用户空间)</li>
-</ol>
-<p>了解CPU内存模型和相关指令后,能更好的理解所谓有序性,可见性,原子性, 还有Java中更抽象一层的内存模型概念,happens-before synchronized-with等等. 在了解线程的管理后, 能更好的理解各种高层的抽象概念的各种锁, 同步的含义.<br>所以,我打算先从硬件底层开始, 然后简单的聊下线程和并发原语在glibc和Linux内核的实现, 以及Linux内核的进程管理. Java层抽象的内存模型的文章海了去, 不着重重复. 有了这些基础,然后聊聊Java并发原语在JVM HotSpot中实现细节. 最后简述下J.U.C(java.util.concurrent)的实现.</p>
-<p>带着问题出发: 一个互斥锁到底是个啥玩意, lock()/unlock()在指令层或操作系统层面到底做了啥?</p>
-<h3 id="1-硬件相关角度的basic-concepts"><a href="#1-硬件相关角度的basic-concepts" class="headerlink" title="1. 硬件相关角度的basic concepts"></a>1. 硬件相关角度的basic concepts</h3><h4 id="1-1-硬件知识，-CPU-cache，-MESI-SMP-NUMA简单介绍-参考文献"><a href="#1-1-硬件知识，-CPU-cache，-MESI-SMP-NUMA简单介绍-参考文献" class="headerlink" title="1.1 硬件知识， CPU cache， MESI, SMP/NUMA简单介绍, 参考文献"></a>1.1 硬件知识， CPU cache， MESI, SMP/NUMA简单介绍, 参考文献</h4><h4 id="1-2-指令重排序和内存屏障-CPU的内存模型"><a href="#1-2-指令重排序和内存屏障-CPU的内存模型" class="headerlink" title="1.2 指令重排序和内存屏障, CPU的内存模型"></a>1.2 指令重排序和内存屏障, CPU的内存模型</h4><ul>
-<li>LoadLoad, LoadStore, StoreLoad, StoreStore语义  </li>
-<li>acquire, release语义<br>这些语义在x86中的实现,在ARM/PowerPC中又是如何实现, 不妨以JVM HotSpot的实现举例子</li>
-</ul>
-<h4 id="1-3-x86-64为例-各种指令和成本"><a href="#1-3-x86-64为例-各种指令和成本" class="headerlink" title="1.3 x86_64为例, 各种指令和成本"></a>1.3 x86_64为例, 各种指令和成本</h4><ul>
-<li>CAS的指令支持, ABA问题,</li>
-<li>以及lock 指令prefix, fence，mfence， lfence，sfence，作用以及成本.<br>对成本有个感性的理解, 能更好理解为啥java synchronized关键字在JVM的偏向锁等等优化, 以及各种lock-free实现的目的.</li>
-</ul>
-<h3 id="2-线程在glibc-NPTL和Linux内核实现及调度和通信简介"><a href="#2-线程在glibc-NPTL和Linux内核实现及调度和通信简介" class="headerlink" title="2. 线程在glibc/NPTL和Linux内核实现及调度和通信简介"></a>2. 线程在glibc/NPTL和Linux内核实现及调度和通信简介</h3><ul>
-<li>线程/进程/轻量级进程(LWP)</li>
-<li>进程切换(switch)</li>
-<li>中断</li>
-</ul>
-<h3 id="3-linux提供的快速同步-互斥机制Futex-Fast-Userspace-muTEXes"><a href="#3-linux提供的快速同步-互斥机制Futex-Fast-Userspace-muTEXes" class="headerlink" title="3. linux提供的快速同步/互斥机制Futex(Fast Userspace muTEXes)"></a>3. linux提供的快速同步/互斥机制Futex(Fast Userspace muTEXes)</h3><ul>
-<li>futex</li>
-<li>实现细节</li>
-</ul>
-<h3 id="4-并发基础原语pthread-mutex-pthread-cond等在glibc-NPTL中的实现"><a href="#4-并发基础原语pthread-mutex-pthread-cond等在glibc-NPTL中的实现" class="headerlink" title="4. 并发基础原语pthread_mutex/pthread_cond等在glibc/NPTL中的实现"></a>4. 并发基础原语pthread_mutex/pthread_cond等在glibc/NPTL中的实现</h3><ul>
-<li>pthread_cond_t (pthreadtypes.h)</li>
-<li>pthread_mutex_t</li>
-<li>pthread_cond_wait</li>
-<li>…</li>
-</ul>
-<p>Windows:<br>Condition variables are synchronization primitives <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms682052(v=vs.85" target="_blank" rel="external">Condition variables</a>.aspx)</p>
-<h3 id="5-Java-C-的内存模型简述"><a href="#5-Java-C-的内存模型简述" class="headerlink" title="5. Java/C++的内存模型简述"></a>5. Java/C++的内存模型简述</h3><ul>
-<li>java final等关键字的行为等.</li>
-<li>C++中局部static变量初始化等含义.</li>
-<li>happen before</li>
-<li>volatitle/synchronized语义</li>
-<li>…</li>
-</ul>
-<h3 id="6-Java并发基础原语在JVM-HotSpot上实现"><a href="#6-Java并发基础原语在JVM-HotSpot上实现" class="headerlink" title="6. Java并发基础原语在JVM HotSpot上实现"></a>6. Java并发基础原语在JVM HotSpot上实现</h3><h4 id="6-1-Java-并发基础原语-1-Java-volatile在HotSpot中的实现，"><a href="#6-1-Java-并发基础原语-1-Java-volatile在HotSpot中的实现，" class="headerlink" title="6.1 Java 并发基础原语(1) Java volatile在HotSpot中的实现，"></a>6.1 Java 并发基础原语(1) Java volatile在HotSpot中的实现，</h4><h4 id="6-2-Java-并发基础原语-2-synchronized在HotSpot中的实现"><a href="#6-2-Java-并发基础原语-2-synchronized在HotSpot中的实现" class="headerlink" title="6.2 Java 并发基础原语(2) synchronized在HotSpot中的实现"></a>6.2 Java 并发基础原语(2) synchronized在HotSpot中的实现</h4><h4 id="6-3-Java-并发基础原语-3-unsafe-variablehandler-java-9-HotSpot中的实现"><a href="#6-3-Java-并发基础原语-3-unsafe-variablehandler-java-9-HotSpot中的实现" class="headerlink" title="6.3 Java 并发基础原语(3) unsafe/variablehandler(java 9)HotSpot中的实现"></a>6.3 Java 并发基础原语(3) unsafe/variablehandler(java 9)HotSpot中的实现</h4><h4 id="6-4-Java-并发基础原语-4-：LockSupport类"><a href="#6-4-Java-并发基础原语-4-：LockSupport类" class="headerlink" title="6.4 Java 并发基础原语(4)：LockSupport类"></a>6.4 Java 并发基础原语(4)：LockSupport类</h4><p>Basic thread blocking primitives   </p>
-<h3 id="7-J-U-C-java-util-concurrent-简述"><a href="#7-J-U-C-java-util-concurrent-简述" class="headerlink" title="7. J.U.C(java.util.concurrent)简述"></a>7. J.U.C(java.util.concurrent)简述</h3><h4 id="7-1-J-U-C-atomic"><a href="#7-1-J-U-C-atomic" class="headerlink" title="7.1 J.U.C atomic"></a>7.1 J.U.C atomic</h4><h4 id="7-2-J-U-C-核心类AQS-AbstractQueuedSynchronizer"><a href="#7-2-J-U-C-核心类AQS-AbstractQueuedSynchronizer" class="headerlink" title="7.2 J.U.C 核心类AQS(AbstractQueuedSynchronizer)"></a>7.2 J.U.C 核心类AQS(AbstractQueuedSynchronizer)</h4><h4 id="7-3-J-U-C-读写锁ReentrantReadWriteLock，"><a href="#7-3-J-U-C-读写锁ReentrantReadWriteLock，" class="headerlink" title="7.3 J.U.C 读写锁ReentrantReadWriteLock，"></a>7.3 J.U.C 读写锁ReentrantReadWriteLock，</h4><h4 id="7-4-J-U-C-重入锁RentrantLock"><a href="#7-4-J-U-C-重入锁RentrantLock" class="headerlink" title="7.4 J.U.C 重入锁RentrantLock"></a>7.4 J.U.C 重入锁RentrantLock</h4><h4 id="7-5-J-U-C-其他cyclicBarrier-CountDownLatch…"><a href="#7-5-J-U-C-其他cyclicBarrier-CountDownLatch…" class="headerlink" title="7.5 J.U.C 其他cyclicBarrier, CountDownLatch…"></a>7.5 J.U.C 其他cyclicBarrier, CountDownLatch…</h4><h4 id="7-6-J-U-C-线程池ThreadPoolExecutor-InterruptedException"><a href="#7-6-J-U-C-线程池ThreadPoolExecutor-InterruptedException" class="headerlink" title="7.6 J.U.C 线程池ThreadPoolExecutor/InterruptedException"></a>7.6 J.U.C 线程池ThreadPoolExecutor/InterruptedException</h4><h4 id="7-7-Thread-Runnable"><a href="#7-7-Thread-Runnable" class="headerlink" title="7.7 Thread/Runnable"></a>7.7 Thread/Runnable</h4><h3 id="8-lock-free和例子"><a href="#8-lock-free和例子" class="headerlink" title="8. lock free和例子"></a>8. lock free和例子</h3><h3 id="9-实战中碰到的某些并发例子"><a href="#9-实战中碰到的某些并发例子" class="headerlink" title="9. 实战中碰到的某些并发例子"></a>9. 实战中碰到的某些并发例子</h3><h4 id="threads和memory泄露了-死锁了-如何发现和修复"><a href="#threads和memory泄露了-死锁了-如何发现和修复" class="headerlink" title="threads和memory泄露了, 死锁了, 如何发现和修复"></a>threads和memory泄露了, 死锁了, 如何发现和修复</h4><h4 id="有趣的instanceOf例子"><a href="#有趣的instanceOf例子" class="headerlink" title="有趣的instanceOf例子"></a>有趣的instanceOf例子</h4><p>/// 未完待续</p>
-
       
     </div>
     <footer>
       
+        
+          <div class="alignleft">
+            <a href="/2017/07/09/理解concurrency系列-引子/#more" class="more-link">Read More</a>
+          </div>
         
         
       
@@ -424,42 +431,6 @@
         
           <div class="alignleft">
             <a href="/2014/12/19/基于库实现多线程的局限/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2014-11-24T16:00:00.000Z"><a href="/2014/11/25/template_argument_deduction/">2014-11-25</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/25/template_argument_deduction/">template argument deduction</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>C++11加入了rvalue reference的概念后，类型推导规则更加复杂了。微软的Stephan Lavavej在Channel9的Core C++系列中对deduction简单地做了些<a href="http://channel9.msdn.com/Series/C9-Lectures-Stephan-T-Lavavej-Core-C-/Stephan-T-Lavavej-Core-C-2-of-n">介绍</a> ，但并没有深入地讲。我拿<a href="http://isocpp.org/files/papers/N3690.pdf">C++标准</a>研究了一把，发现deduction的规则细节还是比较繁琐的。标准文档的可读性不太好，颇费脑细胞. 相对而言<a href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">cppreference</a>可读性要好一些。这篇主要总结函数调用时的类型推导(Deduction from a function call)和不进行类型推导的几种情况(Non-deduced contexts)</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2014/11/25/template_argument_deduction/#more" class="more-link">Read More</a>
           </div>
         
         

@@ -1,0 +1,249 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>理解并发系列(1) 由wait/sleep例子开始 | 柯贤达</title>
+  <meta name="author" content="柯贤达 powered by hexo">
+  
+  <meta name="description" content="0. 引子实习生小T同事和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:
+
+sleep 不会释放锁; 而wait 会释放锁
+wait要先synchronized
+
+打破砂锅问到底的小T不满意答案,
+
+啥叫释放锁持有锁? 啥叫阻塞队列
+线程怎么放弃或拿到CPU的时间切片">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="理解并发系列(1) 由wait/sleep例子开始"/>
+  <meta property="og:site_name" content="柯贤达"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">柯贤达</a></h1>
+  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/categories/技术/">技术</a></li>
+    
+      <li><a href="/categories/随笔/">随笔</a></li>
+    
+      <li><a href="/categories/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+      <li><a href="http://github.com/kexianda">github</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2017-07-10T13:45:57.000Z"><a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">2017-07-10</a></time>
+      
+      
+  
+    <h1 class="title">理解并发系列(1) 由wait/sleep例子开始</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="0-引子"><a href="#0-引子" class="headerlink" title="0. 引子"></a>0. 引子</h2><p>实习生小T同事和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:</p>
+<ul>
+<li>sleep 不会释放锁; 而wait 会释放锁</li>
+<li>wait要先synchronized</li>
+</ul>
+<p>打破砂锅问到底的小T不满意答案,</p>
+<ul>
+<li>啥叫释放锁持有锁? 啥叫阻塞队列</li>
+<li>线程怎么放弃或拿到CPU的时间切片  <a id="more"></a>
+</li>
+</ul>
+<p>“线程怎么放弃拿到CPU的时间切片?” 这个问题复杂了, 涉及到内核的线程管理和切换(Linux内核里switch_to函数), 以及用户空间的代码怎么实现线程, 还有进程的通信等等, 以后有空再聊. 先聊前面的问题.</p>
+<h2 id="1-简单问题-啥叫持有锁-释放锁-阻塞队列-啥叫锁"><a href="#1-简单问题-啥叫持有锁-释放锁-阻塞队列-啥叫锁" class="headerlink" title="1. 简单问题: 啥叫持有锁,释放锁,阻塞队列? 啥叫锁?"></a>1. 简单问题: 啥叫持有锁,释放锁,阻塞队列? 啥叫锁?</h2><h3 id="非常粗糙的说"><a href="#非常粗糙的说" class="headerlink" title="非常粗糙的说,"></a>非常粗糙的说,</h3><p>所谓锁是: 某个flag(某字段) + 用管理线程的对列.<br>A线程持有锁的意思就是, A线程在flag撒尿里标记好, flag你现在是大A我的人了, 别人看到会自己滚开, 大A线程可以继续欢快的干活了.<br>阻塞队列: 比如说,小B线程恰好也来查看一下flag, 发现flag已有归宿, 那么小B就无奈的跑到某个线程队列里, 且告诉操作系统,我暂时不跑CPU了,默默在队列里等待机会.<br>释放锁: 意思是, 大A线程干完活, 把flag自己留下标记尿液擦干净. 留给别人来抢了. 要不要放啥队列,看需求</p>
+<p>注意点1: 对flag做标记过程, 必须是原子操作, 不能AB各撒一泡.<br>注意点2: 进出队列的过程需要好几步骤,不能被打断, 也需保护起来, 用自旋锁啥的保护起来.  </p>
+<h3 id="稍微稍微详细一点儿说"><a href="#稍微稍微详细一点儿说" class="headerlink" title="稍微稍微详细一点儿说,"></a>稍微稍微详细一点儿说,</h3><p>这里synchronized的锁, 是个monitor(HotSpot的ObjectMonitor类), monitor里有个owner字段, 表示谁拥有它, monitor里有线程队列(更准确的讲有两个_EntryList和_WaitSet).<br>A线程设置owner字段为自己, 持有了锁.<br>B过来后看到owner已经被A线程占有了,默默的去_EntryList里等着, 让操作系统阻塞自己.<br>A线程活没干完但缺少啥东西了, 自己在这个monitor上wait()一把, 进入_WaitSet队列, 让操作系统阻塞自己, 把owner字段设置为null, 释放了锁. 或者是A干完活, 执行monitorexit, 把owner字段清掉, 释放锁.</p>
+<p>为什么整两个队列_EntryList和_WaitSet?  因为Object.notify()的时候, 把_WaitSet里线程放到_EntryList里做好下一次抢占锁的准备.</p>
+<h2 id="2-不简单问题-为何wait要先sychronized"><a href="#2-不简单问题-为何wait要先sychronized" class="headerlink" title="2. 不简单问题: 为何wait要先sychronized?"></a>2. 不简单问题: 为何wait要先sychronized?</h2><p>否则会抛出IllegalMonitorStateException异常.<br>为什么要这样, 我个人理解是觉得是语义使然. wait和notify搭配使用, 比如生产者消费者情景, 消费者需要等待,那么wait, 放弃锁.  生产可以拿到锁生产数据然后notify消费者.  如果wait不放弃锁, 那么后面的生产拿不到锁,更无法notify了.<br>可以参考<a href="http://www.xyzws.com/javafaq/why-wait-notify-notifyall-must-be-called-inside-a-synchronized-method-block/127" target="_blank" rel="external">这篇文章</a></p>
+<h2 id="3-JVM里怎么实现wait的语义"><a href="#3-JVM里怎么实现wait的语义" class="headerlink" title="3. JVM里怎么实现wait的语义"></a>3. JVM里怎么实现wait的语义</h2><p>ObjectMonitor对象中有两个队列：<br>_WaitSet 和 _EntryList. _owner指向获得ObjectMonitor对象的线程. 线程试图取得锁(monitorenter)但被占有, 那么被放到WaitSet里, 线程自己wait了, 放入_EntryList里去.<br>这里引用HotSpot(OpenJDK 9)的代码, 不是要详述JVM的实现(太太复杂了), 不用头疼, 极度简化版. 只是用来描述wait的语义.  留下仅仅几行最核心的逻辑. 我添加注释.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line">ObjectMonitor::wait() &#123;</div><div class="line"></div><div class="line">  <span class="comment">// 省略若干代码...</span></div><div class="line"></div><div class="line">  <span class="comment">//把线程用ObjectWaiter包装起来, 准备放入_WaiterList里</span></div><div class="line">  <span class="function">ObjectWaiter <span class="title">node</span><span class="params">(Self)</span></span>;</div><div class="line">  node.TState = ObjectWaiter::TS_WAIT;</div><div class="line">  Self-&gt;_ParkEvent-&gt;reset();     <span class="comment">//</span></div><div class="line">  OrderAccess::fence();          <span class="comment">// ST into Event; membar ; LD interrupted-flag</span></div><div class="line"></div><div class="line">  <span class="comment">// ...</span></div><div class="line"></div><div class="line">  <span class="comment">//把线程放入_WaiterList里, 这个过程必须原子</span></div><div class="line">  Thread::SpinAcquire(&amp;_WaitSetLock, <span class="string">"WaitSet - add"</span>);</div><div class="line">  AddWaiter(&amp;node);</div><div class="line">  Thread::SpinRelease(&amp;_WaitSetLock);</div><div class="line"></div><div class="line">  <span class="comment">// ...</span></div><div class="line"></div><div class="line">  <span class="comment">// 释放锁, 省略若干代码...</span></div><div class="line">  <span class="built_in">exit</span>(<span class="literal">true</span>, Self);     <span class="comment">// exit the monitor</span></div><div class="line"></div><div class="line">  <span class="comment">// ...</span></div><div class="line"></div><div class="line">  <span class="comment">//这时候才是真的调用系统调用, 休眠自己</span></div><div class="line">  <span class="comment">// 实现其实是用pthread的API, pthread_cond_wait等接口</span></div><div class="line">  <span class="comment">// 而pthread_cond_wait又是调用Linux系统调用futex</span></div><div class="line">  Self-&gt;_ParkEvent-&gt;park();</div><div class="line"></div><div class="line">  <span class="comment">// ...</span></div><div class="line">&#125;</div><div class="line"></div><div class="line">ObjectMonitor::wait() &#123;</div><div class="line">  <span class="comment">// ...</span></div><div class="line"></div><div class="line">  <span class="comment">// 把owner清空,</span></div><div class="line">  <span class="comment">// 这里OrderAccess的语义和必要性,以后再聊</span></div><div class="line">  OrderAccess::release_store_ptr(&amp;_owner, <span class="literal">NULL</span>);   <span class="comment">// drop the lock</span></div><div class="line">  OrderAccess::storeload();</div><div class="line">  <span class="comment">// ...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="4-sleep的语义"><a href="#4-sleep的语义" class="headerlink" title="4. sleep的语义"></a>4. sleep的语义</h2><p>下次再说</p>
+<h2 id="5-还有很多问题"><a href="#5-还有很多问题" class="headerlink" title="5. 还有很多问题"></a>5. 还有很多问题</h2><ul>
+<li>synchronized的偏向锁, 锁膨胀等</li>
+<li>JVM实现代码的里个中内存屏障,OrderAccess::storeload()等, 啥意思,干啥的. 涉及到内存模型.</li>
+<li>JVM调用系统,休眠线程涉及到glibc的NPTL实现,和linux内核的futex. 这时候彻底理解多线程在用户空间和操作系统内核空间怎么运行的关键</li>
+</ul>
+<p>希望以后能有空继续写一系列文章.</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+    
+      <a class="addthis_button_sinaweibo"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  
+  <div class="ds-thread" data-thread-key="2017/07/10/理解并发系列-1-由wait-sleep例子开始/" data-title="理解并发系列(1) 由wait/sleep例子开始" data-url="http://kexianda.github.io/2017/07/10/理解并发系列-1-由wait-sleep例子开始/"></div>
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"kexianda"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0] 
+       || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:kexianda.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/技术/">技术</a><small>10</small></li>
+  
+    <li><a href="/categories/生活/">生活</a><small>6</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/C/">C++</a><small>3</small></li>
+  
+    <li><a href="/tags/HotSpot/">HotSpot</a><small>5</small></li>
+  
+    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
+  
+    <li><a href="/tags/协程/">协程</a><small>1</small></li>
+  
+    <li><a href="/tags/多线程/">多线程</a><small>1</small></li>
+  
+    <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
+  
+    <li><a href="/tags/并发/">并发</a><small>3</small></li>
+  
+    <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>5</small></li>
+  
+    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
+  
+    <li><a href="/tags/高并发/">高并发</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">About me</h3>
+  <ul class="entry about-me">
+    
+    
+    <ul>柯贤达 </ul>
+    
+    <ul> kexianda(at)gmail </ul>
+    
+    <ul> 码农 </ul>
+    
+    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 柯贤达 powered by hexo
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
