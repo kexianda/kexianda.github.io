@@ -67,11 +67,12 @@
     </header>
     <div class="entry">
       
-        <h2 id="0-引子"><a href="#0-引子" class="headerlink" title="0. 引子"></a>0. 引子</h2><p>实习生小T同事和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:</p>
+        <h2 id="0-引子"><a href="#0-引子" class="headerlink" title="0. 引子"></a>0. 引子</h2><p>实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:</p>
 <ul>
 <li>sleep 不会释放锁; 而wait 会释放锁</li>
 <li>wait要先synchronized</li>
 </ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//代码片段</span></div><div class="line">sychronized(<span class="keyword">this</span>) &#123;</div><div class="line">  Thread.sleep();</div><div class="line">  <span class="comment">//this.wait()</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>打破砂锅问到底的小T不满意答案,</p>
 <ul>
 <li>啥叫释放锁持有锁? 啥叫阻塞队列</li>
