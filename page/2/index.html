@@ -57,6 +57,43 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2014-12-18T16:00:00.000Z"><a href="/2014/12/19/基于库实现多线程的局限/">2014-12-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/12/19/基于库实现多线程的局限/">基于库实现多线程的局限</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近在看C++ Memory Model, 顺便读了Hans-J. Boehm的10年前的paper <a href="http://www.hpl.hp.com/techreports/2004/HPL-2004-209.pdf">Threads Cannot be Implemented as a Library</a>。<br>C++多线程库有很多，但Boehm指出，C++的多线程库大多数情况是OK的，但在有些情况下是有问题的，并列举了三种情况。此外，因库隐藏了底层现实，在追求极致性能的地方使用库有限制。Boehm的结论是：C++必须在语言层面上支持多线性。正因Boehm和Herb Sutter的努力，C++11支持了多线程。</p>
+<p>Boehm大叔以POSIX的规范pthread为例，进行详细的论述，简单总结如下：<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2014/12/19/基于库实现多线程的局限/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2014-11-24T16:00:00.000Z"><a href="/2014/11/25/template_argument_deduction/">2014-11-25</a></time>
       
       
@@ -371,7 +408,7 @@
   <h3 class="title">分类</h3>
   <ul class="entry">
   
-    <li><a href="/categories/技术/">技术</a><small>11</small></li>
+    <li><a href="/categories/技术/">技术</a><small>12</small></li>
   
     <li><a href="/categories/生活/">生活</a><small>6</small></li>
   
@@ -396,15 +433,13 @@
   
     <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
   
-    <li><a href="/tags/并发/">并发</a><small>4</small></li>
+    <li><a href="/tags/并发/">并发</a><small>6</small></li>
   
     <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
   
     <li><a href="/tags/读书/">读书</a><small>5</small></li>
   
     <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
-  
-    <li><a href="/tags/高并发/">高并发</a><small>1</small></li>
   
   </ul>
 </div>
