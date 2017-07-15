@@ -1,80 +1,346 @@
-<!DOCTYPE HTML>
-<html>
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="C++,多线程," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：  了解CPU的Memory Barriers机制(Paul McKenny的Memory Barriers: a Hardware View for Software Hackers)。了解CPU内部不同的">
+<meta name="keywords" content="C++,多线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Double-checked Locking">
+<meta property="og:url" content="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/index.html">
+<meta property="og:site_name" content="柯贤达">
+<meta property="og:description" content="在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：  了解CPU的Memory Barriers机制(Paul McKenny的Memory Barriers: a Hardware View for Software Hackers)。了解CPU内部不同的">
+<meta property="og:updated_time" content="2017-07-15T11:42:34.941Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Double-checked Locking">
+<meta name="twitter:description" content="在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：  了解CPU的Memory Barriers机制(Paul McKenny的Memory Barriers: a Hardware View for Software Hackers)。了解CPU内部不同的">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/"/>
+
+
+
+
+
   <title>Double-checked Locking | 柯贤达</title>
-  <meta name="author" content="柯贤达 powered by hexo">
-  
-  <meta name="description" content="在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：
-
-了解CPU的Memory Barriers机制(Paul McKenny的Memory Barriers: a Hardware View for Software Hackers)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。
-然后看Jeff Preshing的blog, 他的帖子深入浅出，写得非常好。
-《C++ Concurrency in action》, 作者是boost thread的作者。讲stl的thread的接口。
-再看看Herb Sutter,Hans Boehm等人的文章。 Bartosz Milewski的博客也值得看看.
-
-double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇paper，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇文章讨论这个问题.
-看完大牛们的文章, 一步一步来动手实现一个Singleton，最后用template泛化.">
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
-  <meta property="og:title" content="Double-checked Locking"/>
-  <meta property="og:site_name" content="柯贤达"/>
-
-  
-    <meta property="og:image" content="undefined"/>
   
 
-  <link href="/favicon.png" rel="icon">
-  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
-  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
-  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
+
+
+
+
+
+
+
+
+
+
+
+
 
 </head>
 
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
-<body>
-  <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">柯贤达</a></h1>
-  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">柯贤达</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">人,诗意地栖居在大地上。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
 </div>
-<nav id="main-nav" class="alignright">
-  <ul>
-    
-      <li><a href="/">首页</a></li>
-    
-      <li><a href="/categories/技术/">技术</a></li>
-    
-      <li><a href="/categories/随笔/">随笔</a></li>
-    
-      <li><a href="/categories/生活/">生活</a></li>
-    
-      <li><a href="/archives">归档</a></li>
-    
-      <li><a href="http://github.com/kexianda">github</a></li>
-    
-  </ul>
-  <div class="clearfix"></div>
-</nav>
-<div class="clearfix"></div></header>
-  <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2014-12-27T16:00:00.000Z"><a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/">2014-12-28</a></time>
-      
-      
-  
-    <h1 class="title">Double-checked Locking</h1>
+
+<nav class="site-nav">
   
 
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
     </header>
-    <div class="entry">
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Double-checked Locking</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-12-28T00:00:00+08:00">
+                2014-12-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
       
         <p>在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：</p>
 <ol>
@@ -114,153 +380,381 @@ double-checked locking是一个用来学习多线程的好例子。 Scott Meyers
 
       
     </div>
-    <footer>
+
+    <div>
       
         
-  
-  <div class="categories">
-    <a href="/categories/技术/">技术</a>
-  </div>
-
-        
-  
-  <div class="tags">
-    <a href="/tags/C/">C++</a>, <a href="/tags/多线程/">多线程</a>
-  </div>
-
-        
-  <div class="addthis addthis_toolbox addthis_default_style">
-    
-    
-      <a class="addthis_button_sinaweibo"></a>
-    
-    
-      <a class="addthis_button_tweet"></a>
-    
-    
-      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
-    
-    
-    <a class="addthis_counter addthis_pill_style"></a>
-  </div>
-  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
 
       
-      <div class="clearfix"></div>
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C++</a>
+          
+            <a href="/tags/多线程/" rel="tag"># 多线程</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/12/19/基于库实现多线程的局限/" rel="next" title="基于库实现多线程的局限">
+                <i class="fa fa-chevron-left"></i> 基于库实现多线程的局限
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/04/28/从HotSpot源码看Java-volatile/" rel="prev" title="从HotSpot源码看Java volatile">
+                从HotSpot源码看Java volatile <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
     </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
   </div>
-</article>
 
 
-<section id="comment">
-  
-  <div class="ds-thread" data-thread-key="2014/12/28/double-checked-locking-singleton-in-cpp11/" data-title="Double-checked Locking" data-url="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/"></div>
-
-  <script type="text/javascript">
-    var duoshuoQuery = {short_name:"kexianda"};
-    (function() {
-      var ds = document.createElement('script');
-      ds.type = 'text/javascript';ds.async = true;
-      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-      ds.charset = 'UTF-8';
-      (document.getElementsByTagName('head')[0] 
-       || document.getElementsByTagName('body')[0]).appendChild(ds);
-    })();
-  </script>
-  
-</section>
-
-</div></div>
-    <aside id="sidebar" class="alignright">
-  <div class="search">
-  <form action="//google.com/search" method="get" accept-charset="utf-8">
-    <input type="search" name="q" results="0" placeholder="搜索">
-    <input type="hidden" name="q" value="site:kexianda.github.io">
-  </form>
-</div>
-
-  
-<div class="widget tag">
-  <h3 class="title">分类</h3>
-  <ul class="entry">
-  
-    <li><a href="/categories/技术/">技术</a><small>12</small></li>
-  
-    <li><a href="/categories/生活/">生活</a><small>6</small></li>
-  
-  </ul>
-</div>
+          </div>
+          
 
 
-  
-<div class="widget tag">
-  <h3 class="title">标签</h3>
-  <ul class="entry">
-  
-    <li><a href="/tags/C/">C++</a><small>3</small></li>
-  
-    <li><a href="/tags/HotSpot/">HotSpot</a><small>5</small></li>
-  
-    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
-  
-    <li><a href="/tags/协程/">协程</a><small>1</small></li>
-  
-    <li><a href="/tags/多线程/">多线程</a><small>1</small></li>
-  
-    <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
-  
-    <li><a href="/tags/并发/">并发</a><small>6</small></li>
-  
-    <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
-  
-    <li><a href="/tags/读书/">读书</a><small>5</small></li>
-  
-    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
-  
-  </ul>
-</div>
-
-
-  
-<div class="widget tag">
-  <h3 class="title">About me</h3>
-  <ul class="entry about-me">
+          
+  <div class="comments" id="comments">
     
-    
-    <ul>柯贤达 </ul>
-    
-    <ul> kexianda(at)gmail </ul>
-    
-    <ul> 码农 </ul>
-    
-    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
-    
-  </ul>
-</div>
-
-</aside>
-    <div class="clearfix"></div>
   </div>
-  <footer id="footer" class="inner"><div class="alignleft">
+
+
+        </div>
+        
+          
   
-  &copy; 2017 柯贤达 powered by hexo
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="柯贤达" />
+          <p class="site-author-name" itemprop="name">柯贤达</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">19</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/kexianda" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-单线程实现"><span class="nav-number">1.</span> <span class="nav-text">1. 单线程实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-多线程的尝试实现"><span class="nav-number">2.</span> <span class="nav-text">2. 多线程的尝试实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-C-11-Sequentially-Consistent-Atomics"><span class="nav-number">3.</span> <span class="nav-text">3. C++11 Sequentially Consistent Atomics</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-用Low-Level-Ordering-Constraints实现"><span class="nav-number">4.</span> <span class="nav-text">4. 用Low-Level Ordering Constraints实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-用Template泛化"><span class="nav-number">5.</span> <span class="nav-text">5. 用Template泛化</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
   
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">柯贤达</span>
 </div>
-<div class="clearfix"></div></footer>
-  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
-<script src="/js/jquery.imagesloaded.min.js"></script>
-<script src="/js/gallery.js"></script>
 
 
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
 
 
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
-<script src="/fancybox/jquery.fancybox.pack.js"></script>
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
 <script type="text/javascript">
-(function($){
-  $('.fancybox').fancybox();
-})(jQuery);
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
 </script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
 
 </body>
 </html>

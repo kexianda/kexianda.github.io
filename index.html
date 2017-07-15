@@ -1,115 +1,492 @@
-<!DOCTYPE HTML>
-<html>
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="柯贤达">
+<meta property="og:url" content="http://kexianda.github.io/index.html">
+<meta property="og:site_name" content="柯贤达">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="柯贤达">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://kexianda.github.io/"/>
+
+
+
+
+
   <title>柯贤达</title>
-  <meta name="author" content="柯贤达 powered by hexo">
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
-  
-  <meta property="og:site_name" content="柯贤达"/>
-
-  
-    <meta property="og:image" content="undefined"/>
   
 
-  <link href="/favicon.png" rel="icon">
-  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
-  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
-  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
+
+
+
+
+
+
+
+
+
+
+
+
 
 </head>
 
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
-<body>
-  <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">柯贤达</a></h1>
-  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left 
+   page-home 
+ ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">柯贤达</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">人,诗意地栖居在大地上。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
 </div>
-<nav id="main-nav" class="alignright">
-  <ul>
-    
-      <li><a href="/">首页</a></li>
-    
-      <li><a href="/categories/技术/">技术</a></li>
-    
-      <li><a href="/categories/随笔/">随笔</a></li>
-    
-      <li><a href="/categories/生活/">生活</a></li>
-    
-      <li><a href="/archives">归档</a></li>
-    
-      <li><a href="http://github.com/kexianda">github</a></li>
-    
-  </ul>
-  <div class="clearfix"></div>
-</nav>
-<div class="clearfix"></div></header>
-  <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-07-15T04:26:58.000Z"><a href="/2017/07/15/理解并发系列-2-为什么Condition-Variable/">2017-07-15</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/07/15/理解并发系列-2-为什么Condition-Variable/">理解并发系列(2)-为什么要有Condition Variable?</a></h1>
+
+<nav class="site-nav">
   
 
-    </header>
-    <div class="entry">
+  
+    <ul id="menu" class="menu">
       
-        <p>儿子最近不在家, 我开机时也没人过来胡锤我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻…</p>
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/15/理解并发系列-2-为什么Condition-Variable/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/07/15/理解并发系列-2-为什么Condition-Variable/" itemprop="url">理解并发系列(2)-为什么要有Condition Variable?</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-15T12:26:58+08:00">
+                2017-07-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>儿子最近不在家, 我开机时也没人过来胡锤我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻…</p>
 <p>Condition Variable是同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序.<br>和实习生同事小T讨论时, 谈到了两个问题:</p>
 <ol>
 <li>有了mutex, 为啥还有整个Condition variable的概念出来?</li>
 <li>Condition为什么要跟一个锁(mutex)一起用? 比如, pthread_cond_wait(cond, mutex), Java里的condition是由锁newCondion()生成.</li>
 </ol>
 <p>我觉得这两问题很有深度, 值得小结一下我个人的理解.<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/07/15/理解并发系列-2-为什么Condition-Variable/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
       
     </div>
-    <footer>
+
+    <div>
       
-        
-          <div class="alignleft">
-            <a href="/2017/07/15/理解并发系列-2-为什么Condition-Variable/#more" class="more-link">Read More</a>
-          </div>
-        
-        
+    </div>
+
+    <div>
       
-      <div class="clearfix"></div>
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
     </footer>
-  </div>
-</article>
+  </article>
 
 
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
+    
       
-        <div class="icon"></div>
-        <time datetime="2017-07-10T13:45:57.000Z"><a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">2017-07-10</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">理解并发系列(1) 由wait/sleep例子开始</a></h1>
+
   
 
-    </header>
-    <div class="entry">
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/" itemprop="url">理解并发系列(1) 由wait/sleep例子开始</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-10T21:45:57+08:00">
+                2017-07-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
       
-        <h2 id="0-引子"><a href="#0-引子" class="headerlink" title="0. 引子"></a>0. 引子</h2><p>实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:</p>
+      
+
+      
+        
+          <h2 id="0-引子"><a href="#0-引子" class="headerlink" title="0. 引子"></a>0. 引子</h2><p>实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:</p>
 <ul>
 <li>sleep 不会释放锁; 而wait 会释放锁</li>
 <li>wait要先synchronized</li>
@@ -119,42 +496,144 @@
 <ul>
 <li>啥叫释放锁持有锁? 啥叫阻塞队列</li>
 <li>线程怎么放弃或拿到CPU的时间切片
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
       
     </div>
-    <footer>
+
+    <div>
       
-        
-          <div class="alignleft">
-            <a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/#more" class="more-link">Read More</a>
-          </div>
-        
-        
+    </div>
+
+    <div>
       
-      <div class="clearfix"></div>
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
     </footer>
-  </div>
-</article>
+  </article>
 
 
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
+    
       
-        <div class="icon"></div>
-        <time datetime="2017-07-09T12:28:06.000Z"><a href="/2017/07/09/理解concurrency系列-引子/">2017-07-09</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/07/09/理解concurrency系列-引子/">理解concurrency系列-引子</a></h1>
+
   
 
-    </header>
-    <div class="entry">
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/09/理解concurrency系列-引子/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/07/09/理解concurrency系列-引子/" itemprop="url">理解concurrency系列-引子</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-09T20:28:06+08:00">
+                2017-07-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
       
-        <h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.<br>要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.</p>
+      
+
+      
+        
+          <h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.<br>要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.</p>
 <ol>
 <li>概念太多,不同层次的抽象,各个分支, 如何有组织有条理的阐述?  </li>
 </ol>
@@ -164,389 +643,1308 @@
 </ol>
 <p>比如对互斥锁信号量等锁的理解: 就是一个状态变量/原子操作,另一个是线程阻塞/唤醒队列的管理,很简单. 但是如果打破砂锅问到底, 可以对细节很深入了解. 比如Java的ReentrantReadWriteLock, 实现里有个sync(用作同步), 需要了解AbstractQueuedSynchronizer类以及primitive LockSupport/UNSAFE的实现. 继续深入, 看去看JVM是如何用pthread_cond_t/pthread_mutex_t等pthread api实现的; 再深入, pthread(glibc的NPTL)又是怎么做的(glibc的代码非常非常的难读). 继续没完没了, 再深入就需要理解NPTL的基础即Linux系统调用futex, 再深入就看futex在内核是怎样实现的. 也许没有必要关注所有细节, 但了解各个层次实现的核心逻辑还是很有好处的.<br>还有, 比如用java的线程池ThreadPoolExecute, 如何处理InterruptedException, 以及为什么要这么处理, interupt到底怎么回事, 在JVM层怎么实现?操作系统里怎么回事?</p>
 <p>要把这些知识整理得深入浅出是要水平的,很花精力和时间. 我非常认同左耳朵耗子说的, 技术文章要写得在马桶上拉屎时都能看懂才是好文章:-) 但这其实要求很高,要有深入理解和很好的有条理的表达. 而我水平有限, 有些技术点研究也不够深入, 精力和时间也不够,也不知道能写的怎么样,能写多少, 不管怎样, 先列个提纲, 以后有空慢慢写, 不是很清楚的细节, 可以边写边研究.</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/07/09/理解concurrency系列-引子/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
       
     </div>
-    <footer>
+
+    <div>
       
-        
-          <div class="alignleft">
-            <a href="/2017/07/09/理解concurrency系列-引子/#more" class="more-link">Read More</a>
-          </div>
-        
-        
+    </div>
+
+    <div>
       
-      <div class="clearfix"></div>
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
     </footer>
-  </div>
-</article>
+  </article>
 
 
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
+    
       
-        <div class="icon"></div>
-        <time datetime="2017-06-09T14:23:56.000Z"><a href="/2017/06/09/instanceOf在多核环境中的并发问题/">2017-06-09</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/06/09/instanceOf在多核环境中的并发问题/">instanceOf在多核环境中的并发问题</a></h1>
+
   
 
-    </header>
-    <div class="entry">
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/06/09/instanceOf在多核环境中的并发问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/06/09/instanceOf在多核环境中的并发问题/" itemprop="url">instanceOf在多核环境中的并发问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-09T22:23:56+08:00">
+                2017-06-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
       
-        <p>同事分享了通过profiling发现的高并发性能问题, <a href="https://www.slideshare.net/SparkSummit/accelerating-spark-genome-sequencing-in-clouda-data-driven-approach-case-studies-and-beyond-spark-summit-east-talk-by-lucy-lu-and-eric-kaczmarek">一个Spark的性能问题</a> 和<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787">一个Cassandra的性能问题</a>, 涉及到:</p>
+      
+
+      
+        
+          <p>同事分享了通过profiling发现的高并发性能问题, <a href="https://www.slideshare.net/SparkSummit/accelerating-spark-genome-sequencing-in-clouda-data-driven-approach-case-studies-and-beyond-spark-summit-east-talk-by-lucy-lu-and-eric-kaczmarek" target="_blank" rel="external">一个Spark的性能问题</a> 和<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787" target="_blank" rel="external">一个Cassandra的性能问题</a>, 涉及到:</p>
 <ul>
 <li>Scala Scalability Issue</li>
 <li>instanceOf在HotSpot中的实现和优化</li>
 <li>CPU Cache thrashing / NUMA  </li>
 </ul>
 <p>从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思, 对写高并发高性能代码有启发, 我把涉及到的知识拓展和小结一下.<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/06/09/instanceOf在多核环境中的并发问题/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
       
     </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/06/09/instanceOf在多核环境中的并发问题/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
 
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-06-02T16:00:00.000Z"><a href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/">2017-06-03</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/">Hacking on HotSpot (1) 环境设置和调试</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)<br>
+    <div>
       
     </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
 
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-05-29T16:00:00.000Z"><a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/">2017-05-30</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/">由WannaCry蠕虫说说密码学原语</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br>
+    <div>
       
     </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/05/30/由WannaCry蠕虫说说密码学原语/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
 
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-05-18T16:00:00.000Z"><a href="/2017/05/19/进程-线程-协程的实现原理/">2017-05-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/05/19/进程-线程-协程的实现原理/">进程/线程/协程的实现原理</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>看了篇<a href="http://www.infoq.com/cn/articles/CplusStyleCorourtine-At-Wechat">微信后台异步化改造的文章</a>, libco协程库加上epoll处理高并发. 企鹅厂是C++控, 后台用C++. 微信这种高并发, 见识了协程的用途. C/C++语言不提供协程的语义. 听过有人用setjmp/longjmp或ucontext实现协程, 一直对这种用户态切换没细看, 估计和操作系统切换进程类似, tss保存起来. 好奇心起, 趁机了解一下协程的实现, 同时整理一下进程/线程的原理.<br>
+    <div>
       
     </div>
-    <footer>
+
+    <footer class="post-footer">
       
-        
-          <div class="alignleft">
-            <a href="/2017/05/19/进程-线程-协程的实现原理/#more" class="more-link">Read More</a>
-          </div>
-        
-        
+
       
-      <div class="clearfix"></div>
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
     </footer>
-  </div>
-</article>
+  </article>
 
 
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
+    
       
-        <div class="icon"></div>
-        <time datetime="2017-04-30T16:00:00.000Z"><a href="/2017/05/01/基础知识小结/">2017-05-01</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/05/01/基础知识小结/">基础知识小结</a></h1>
+
   
 
-    </header>
-    <div class="entry">
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/" itemprop="url">Hacking on HotSpot (1) 环境设置和调试</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-03T00:00:00+08:00">
+                2017-06-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
       
-        <p>转几个写得深入浅出的基础知识文章(有空再更新)：<br>
+      
+
+      
+        
+          <p>调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.<br>有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
       
     </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2017/05/01/基础知识小结/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
 
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-04-28T14:51:49.000Z"><a href="/2017/04/28/从HotSpot源码看Java-volatile/">2017-04-28</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2017/04/28/从HotSpot源码看Java-volatile/">从HotSpot源码看Java volatile</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>几年前曾给同事做过一个java内存模型的knowledge sharing, 摘取部分内容放这, 简单的回顾下内存模型, 然后从JVM hotSpot实现的角度来仔细看看volatile的语义. 就此契机,整理出来.<br>
+    <div>
       
     </div>
-    <footer>
+
+    <div>
       
-        
-          <div class="alignleft">
-            <a href="/2017/04/28/从HotSpot源码看Java-volatile/#more" class="more-link">Read More</a>
-          </div>
-        
-        
+    </div>
+
+    <div>
       
-      <div class="clearfix"></div>
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
     </footer>
-  </div>
-</article>
+  </article>
 
 
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
+    
       
-        <div class="icon"></div>
-        <time datetime="2014-12-27T16:00:00.000Z"><a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/">2014-12-28</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/">Double-checked Locking</a></h1>
+
   
 
-    </header>
-    <div class="entry">
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/05/30/由WannaCry蠕虫说说密码学原语/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/05/30/由WannaCry蠕虫说说密码学原语/" itemprop="url">由WannaCry蠕虫说说密码学原语</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-30T00:00:00+08:00">
+                2017-05-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
       
-        <p>在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：</p>
+      
+
+      
+        
+          <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/05/30/由WannaCry蠕虫说说密码学原语/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/05/19/进程-线程-协程的实现原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/05/19/进程-线程-协程的实现原理/" itemprop="url">进程/线程/协程的实现原理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-19T00:00:00+08:00">
+                2017-05-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>看了篇<a href="http://www.infoq.com/cn/articles/CplusStyleCorourtine-At-Wechat" target="_blank" rel="external">微信后台异步化改造的文章</a>, libco协程库加上epoll处理高并发. 企鹅厂是C++控, 后台用C++. 微信这种高并发, 见识了协程的用途. C/C++语言不提供协程的语义. 听过有人用setjmp/longjmp或ucontext实现协程, 一直对这种用户态切换没细看, 估计和操作系统切换进程类似, tss保存起来. 好奇心起, 趁机了解一下协程的实现, 同时整理一下进程/线程的原理.<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/05/19/进程-线程-协程的实现原理/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/05/01/基础知识小结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/05/01/基础知识小结/" itemprop="url">基础知识小结</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-01T00:00:00+08:00">
+                2017-05-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>转几个写得深入浅出的基础知识文章(有空再更新)：<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/05/01/基础知识小结/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/04/28/从HotSpot源码看Java-volatile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/04/28/从HotSpot源码看Java-volatile/" itemprop="url">从HotSpot源码看Java volatile</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-28T22:51:49+08:00">
+                2017-04-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>几年前曾给同事做过一个java内存模型的knowledge sharing, 摘取部分内容放这, 简单的回顾下内存模型, 然后从JVM hotSpot实现的角度来仔细看看volatile的语义. 就此契机,整理出来.<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/04/28/从HotSpot源码看Java-volatile/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2014/12/28/double-checked-locking-singleton-in-cpp11/" itemprop="url">Double-checked Locking</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-12-28T00:00:00+08:00">
+                2014-12-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：</p>
 <ol>
-<li>了解CPU的Memory Barriers机制(Paul McKenny的<a href="http://irl.cs.ucla.edu/~yingdi/web/paperreading/whymb.2010.06.07c.pdf">Memory Barriers: a Hardware View for Software Hackers</a>)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。</li>
-<li>然后看Jeff Preshing的<a href="http://preshing.com">blog</a>, 他的帖子深入浅出，写得非常好。</li>
+<li>了解CPU的Memory Barriers机制(Paul McKenny的<a href="http://irl.cs.ucla.edu/~yingdi/web/paperreading/whymb.2010.06.07c.pdf" target="_blank" rel="external">Memory Barriers: a Hardware View for Software Hackers</a>)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。</li>
+<li>然后看Jeff Preshing的<a href="http://preshing.com" target="_blank" rel="external">blog</a>, 他的帖子深入浅出，写得非常好。</li>
 <li>《C++ Concurrency in action》, 作者是boost thread的作者。讲stl的thread的接口。</li>
-<li>再看看Herb Sutter,Hans Boehm等人的文章。 <a href="http://bartoszmilewski.com">Bartosz Milewski的博客</a>也值得看看.</li>
+<li>再看看Herb Sutter,Hans Boehm等人的文章。 <a href="http://bartoszmilewski.com" target="_blank" rel="external">Bartosz Milewski的博客</a>也值得看看.</li>
 </ol>
-<p>double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇<a href="http://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf">paper</a>，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇<a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11">文章</a>讨论这个问题.</p>
+<p>double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇<a href="http://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf" target="_blank" rel="external">paper</a>，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇<a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11" target="_blank" rel="external">文章</a>讨论这个问题.</p>
 <p>看完大牛们的文章, 一步一步来动手实现一个Singleton，最后用template泛化.</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2014/12/28/double-checked-locking-singleton-in-cpp11/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
       
     </div>
-    <footer>
+
+    <div>
       
-        
-          <div class="alignleft">
-            <a href="/2014/12/28/double-checked-locking-singleton-in-cpp11/#more" class="more-link">Read More</a>
-          </div>
-        
-        
+    </div>
+
+    <div>
       
-      <div class="clearfix"></div>
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
     </footer>
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+
+          
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
   </div>
-</article>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="柯贤达" />
+          <p class="site-author-name" itemprop="name">柯贤达</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">19</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/kexianda" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
 
 
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
 
 
+        
+      </div>
+    </main>
 
-<nav id="pagination">
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
   
-  
-    <a href="/page/2/" class="alignright next">下一页</a>
-  
-  <div class="clearfix"></div>
-</nav></div></div>
-    <aside id="sidebar" class="alignright">
-  <div class="search">
-  <form action="//google.com/search" method="get" accept-charset="utf-8">
-    <input type="search" name="q" results="0" placeholder="搜索">
-    <input type="hidden" name="q" value="site:kexianda.github.io">
-  </form>
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">柯贤达</span>
 </div>
 
-  
-<div class="widget tag">
-  <h3 class="title">分类</h3>
-  <ul class="entry">
-  
-    <li><a href="/categories/技术/">技术</a><small>12</small></li>
-  
-    <li><a href="/categories/生活/">生活</a><small>6</small></li>
-  
-  </ul>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
 </div>
 
 
-  
-<div class="widget tag">
-  <h3 class="title">标签</h3>
-  <ul class="entry">
-  
-    <li><a href="/tags/C/">C++</a><small>3</small></li>
-  
-    <li><a href="/tags/HotSpot/">HotSpot</a><small>5</small></li>
-  
-    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
-  
-    <li><a href="/tags/协程/">协程</a><small>1</small></li>
-  
-    <li><a href="/tags/多线程/">多线程</a><small>1</small></li>
-  
-    <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
-  
-    <li><a href="/tags/并发/">并发</a><small>6</small></li>
-  
-    <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
-  
-    <li><a href="/tags/读书/">读书</a><small>5</small></li>
-  
-    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
-  
-  </ul>
-</div>
+        
 
+        
+      </div>
+    </footer>
 
-  
-<div class="widget tag">
-  <h3 class="title">About me</h3>
-  <ul class="entry about-me">
     
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
     
-    <ul>柯贤达 </ul>
-    
-    <ul> kexianda(at)gmail </ul>
-    
-    <ul> 码农 </ul>
-    
-    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
-    
-  </ul>
-</div>
 
-</aside>
-    <div class="clearfix"></div>
   </div>
-  <footer id="footer" class="inner"><div class="alignleft">
+
   
-  &copy; 2017 柯贤达 powered by hexo
-  
-</div>
-<div class="clearfix"></div></footer>
-  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
-<script src="/js/jquery.imagesloaded.min.js"></script>
-<script src="/js/gallery.js"></script>
 
-
-
-
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
-<script src="/fancybox/jquery.fancybox.pack.js"></script>
 <script type="text/javascript">
-(function($){
-  $('.fancybox').fancybox();
-})(jQuery);
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
 </script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+    <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
 
 </body>
 </html>

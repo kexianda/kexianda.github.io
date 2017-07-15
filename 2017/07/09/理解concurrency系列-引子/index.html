@@ -1,81 +1,346 @@
-<!DOCTYPE HTML>
-<html>
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="并发," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="引子近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的">
+<meta name="keywords" content="并发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解concurrency系列-引子">
+<meta property="og:url" content="http://kexianda.github.io/2017/07/09/理解concurrency系列-引子/index.html">
+<meta property="og:site_name" content="柯贤达">
+<meta property="og:description" content="引子近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的">
+<meta property="og:updated_time" content="2017-07-15T11:42:34.941Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解concurrency系列-引子">
+<meta name="twitter:description" content="引子近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://kexianda.github.io/2017/07/09/理解concurrency系列-引子/"/>
+
+
+
+
+
   <title>理解concurrency系列-引子 | 柯贤达</title>
-  <meta name="author" content="柯贤达 powered by hexo">
-  
-  <meta name="description" content="引子近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.
-
-概念太多,不同层次的抽象,各个分支, 如何有组织有条理的阐述?  
-
-CPU的内存模型, Java的内存模型, 高层抽象的mutex, semaphore, condition等, 重入锁, 读写锁. 还有什么悲观所乐观锁又是另外一个角度, 自旋锁,偏向锁等等. 总之概念很多. 还有表述问题, 比如我们谈到锁, 有时候可能暗指的是某个原子操作的变量(flag/state), 有时候指的的是包括这个state和相关的线程等待队列.
-
-深入程度怎么把握, 细节蔓延的太多, 会不会影响条理和简洁.  
-
-比如对互斥锁信号量等锁的理解: 就是一个状态变量/原子操作,另一个是线程阻塞/唤醒队列的管理,很简单. 但是如果打破砂锅问到底, 可以对细节很深入了解. 比如Java的ReentrantReadWriteLock, 实现里有个sync(用作同步), 需要了解AbstractQueuedSynchronizer类以及primitive LockSupport/UNSAFE的实现. 继续深入, 看去看JVM是如何用pthread_cond_t/pthread_mutex_t等pthread api实现的; 再深入, pthread(glibc的NPTL)又是怎么做的(glibc的代码非常非常的难读). 继续没完没了, 再深入就需要理解NPTL的基础即Linux系统调用futex, 再深入就看futex在内核是怎样实现的. 也许没有必要关注所有细节, 但了解各个层次实现的核心逻辑还是很有好处的.还有, 比如用java的线程池ThreadPoolExecute, 如何处理InterruptedException, 以及为什么要这么处理, interupt到底怎么回事, 在JVM层怎么实现?操作系统里怎么回事?
-要把这些知识整理得深入浅出是要水平的,很花精力和时间. 我非常认同左耳朵耗子说的, 技术文章要写得在马桶上拉屎时都能看懂才是好文章:-) 但这其实要求很高,要有深入理解和很好的有条理的表达. 而我水平有限, 有些技术点研究也不够深入, 精力和时间也不够,也不知道能写的怎么样,能写多少, 不管怎样, 先列个提纲, 以后有空慢慢写, 不是很清楚的细节, 可以边写边研究.">
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
-  <meta property="og:title" content="理解concurrency系列-引子"/>
-  <meta property="og:site_name" content="柯贤达"/>
-
-  
-    <meta property="og:image" content="undefined"/>
   
 
-  <link href="/favicon.png" rel="icon">
-  <link rel="alternate" href="/atom.xml" title="柯贤达" type="application/atom+xml">
-  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
-  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-  
+
+
+
+
+
+
+
+
+
+
+
+
 
 </head>
 
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
-<body>
-  <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">柯贤达</a></h1>
-  <h2><a href="/">人,诗意地栖居在大地上。</a></h2>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">柯贤达</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">人,诗意地栖居在大地上。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
 </div>
-<nav id="main-nav" class="alignright">
-  <ul>
-    
-      <li><a href="/">首页</a></li>
-    
-      <li><a href="/categories/技术/">技术</a></li>
-    
-      <li><a href="/categories/随笔/">随笔</a></li>
-    
-      <li><a href="/categories/生活/">生活</a></li>
-    
-      <li><a href="/archives">归档</a></li>
-    
-      <li><a href="http://github.com/kexianda">github</a></li>
-    
-  </ul>
-  <div class="clearfix"></div>
-</nav>
-<div class="clearfix"></div></header>
-  <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2017-07-09T12:28:06.000Z"><a href="/2017/07/09/理解concurrency系列-引子/">2017-07-09</a></time>
-      
-      
-  
-    <h1 class="title">理解concurrency系列-引子</h1>
+
+<nav class="site-nav">
   
 
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
     </header>
-    <div class="entry">
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/09/理解concurrency系列-引子/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">理解concurrency系列-引子</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-09T20:28:06+08:00">
+                2017-07-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
       
         <h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.<br>要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.</p>
 <ol>
@@ -133,153 +398,379 @@ CPU的内存模型, Java的内存模型, 高层抽象的mutex, semaphore, condit
 
       
     </div>
-    <footer>
+
+    <div>
       
         
-  
-  <div class="categories">
-    <a href="/categories/技术/">技术</a>
-  </div>
-
-        
-  
-  <div class="tags">
-    <a href="/tags/并发/">并发</a>
-  </div>
-
-        
-  <div class="addthis addthis_toolbox addthis_default_style">
-    
-    
-      <a class="addthis_button_sinaweibo"></a>
-    
-    
-      <a class="addthis_button_tweet"></a>
-    
-    
-      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
-    
-    
-    <a class="addthis_counter addthis_pill_style"></a>
-  </div>
-  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-545f079a33ba6a4d"></script>
 
       
-      <div class="clearfix"></div>
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/并发/" rel="tag"># 并发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/09/instanceOf在多核环境中的并发问题/" rel="next" title="instanceOf在多核环境中的并发问题">
+                <i class="fa fa-chevron-left"></i> instanceOf在多核环境中的并发问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/10/理解并发系列-1-由wait-sleep例子开始/" rel="prev" title="理解并发系列(1) 由wait/sleep例子开始">
+                理解并发系列(1) 由wait/sleep例子开始 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
     </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
   </div>
-</article>
 
 
-<section id="comment">
-  
-  <div class="ds-thread" data-thread-key="2017/07/09/理解concurrency系列-引子/" data-title="理解concurrency系列-引子" data-url="http://kexianda.github.io/2017/07/09/理解concurrency系列-引子/"></div>
-
-  <script type="text/javascript">
-    var duoshuoQuery = {short_name:"kexianda"};
-    (function() {
-      var ds = document.createElement('script');
-      ds.type = 'text/javascript';ds.async = true;
-      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-      ds.charset = 'UTF-8';
-      (document.getElementsByTagName('head')[0] 
-       || document.getElementsByTagName('body')[0]).appendChild(ds);
-    })();
-  </script>
-  
-</section>
-
-</div></div>
-    <aside id="sidebar" class="alignright">
-  <div class="search">
-  <form action="//google.com/search" method="get" accept-charset="utf-8">
-    <input type="search" name="q" results="0" placeholder="搜索">
-    <input type="hidden" name="q" value="site:kexianda.github.io">
-  </form>
-</div>
-
-  
-<div class="widget tag">
-  <h3 class="title">分类</h3>
-  <ul class="entry">
-  
-    <li><a href="/categories/技术/">技术</a><small>12</small></li>
-  
-    <li><a href="/categories/生活/">生活</a><small>6</small></li>
-  
-  </ul>
-</div>
+          </div>
+          
 
 
-  
-<div class="widget tag">
-  <h3 class="title">标签</h3>
-  <ul class="entry">
-  
-    <li><a href="/tags/C/">C++</a><small>3</small></li>
-  
-    <li><a href="/tags/HotSpot/">HotSpot</a><small>5</small></li>
-  
-    <li><a href="/tags/内存模型/">内存模型</a><small>1</small></li>
-  
-    <li><a href="/tags/协程/">协程</a><small>1</small></li>
-  
-    <li><a href="/tags/多线程/">多线程</a><small>1</small></li>
-  
-    <li><a href="/tags/密码学原语/">密码学原语</a><small>1</small></li>
-  
-    <li><a href="/tags/并发/">并发</a><small>6</small></li>
-  
-    <li><a href="/tags/汇编优化/">汇编优化</a><small>1</small></li>
-  
-    <li><a href="/tags/读书/">读书</a><small>5</small></li>
-  
-    <li><a href="/tags/音乐/">音乐</a><small>1</small></li>
-  
-  </ul>
-</div>
-
-
-  
-<div class="widget tag">
-  <h3 class="title">About me</h3>
-  <ul class="entry about-me">
+          
+  <div class="comments" id="comments">
     
-    
-    <ul>柯贤达 </ul>
-    
-    <ul> kexianda(at)gmail </ul>
-    
-    <ul> 码农 </ul>
-    
-    <ul> 嗜辣椒、河鲜、摇滚、单车</ul>
-    
-  </ul>
-</div>
-
-</aside>
-    <div class="clearfix"></div>
   </div>
-  <footer id="footer" class="inner"><div class="alignleft">
+
+
+        </div>
+        
+          
   
-  &copy; 2017 柯贤达 powered by hexo
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="柯贤达" />
+          <p class="site-author-name" itemprop="name">柯贤达</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">19</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/kexianda" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引子"><span class="nav-number">1.</span> <span class="nav-text">引子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#大纲"><span class="nav-number">2.</span> <span class="nav-text">大纲</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-硬件相关角度的basic-concepts"><span class="nav-number">2.1.</span> <span class="nav-text">1. 硬件相关角度的basic concepts</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-硬件知识，-CPU-cache，-MESI-SMP-NUMA简单介绍-参考文献"><span class="nav-number">2.1.1.</span> <span class="nav-text">1.1 硬件知识， CPU cache， MESI, SMP/NUMA简单介绍, 参考文献</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-指令重排序和内存屏障-CPU的内存模型"><span class="nav-number">2.1.2.</span> <span class="nav-text">1.2 指令重排序和内存屏障, CPU的内存模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-x86-64为例-各种指令和成本"><span class="nav-number">2.1.3.</span> <span class="nav-text">1.3 x86_64为例, 各种指令和成本</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-线程在glibc-NPTL和Linux内核实现及调度和通信简介"><span class="nav-number">2.2.</span> <span class="nav-text">2. 线程在glibc/NPTL和Linux内核实现及调度和通信简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-linux提供的快速同步-互斥机制Futex-Fast-Userspace-muTEXes"><span class="nav-number">2.3.</span> <span class="nav-text">3. linux提供的快速同步/互斥机制Futex(Fast Userspace muTEXes)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-并发基础原语pthread-mutex-pthread-cond等在glibc-NPTL中的实现"><span class="nav-number">2.4.</span> <span class="nav-text">4. 并发基础原语pthread_mutex/pthread_cond等在glibc/NPTL中的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-Java-C-的内存模型简述"><span class="nav-number">2.5.</span> <span class="nav-text">5. Java/C++的内存模型简述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-Java并发基础原语在JVM-HotSpot上实现"><span class="nav-number">2.6.</span> <span class="nav-text">6. Java并发基础原语在JVM HotSpot上实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-1-Java-并发基础原语-1-Java-volatile在HotSpot中的实现，"><span class="nav-number">2.6.1.</span> <span class="nav-text">6.1 Java 并发基础原语(1) Java volatile在HotSpot中的实现，</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-2-Java-并发基础原语-2-synchronized在HotSpot中的实现"><span class="nav-number">2.6.2.</span> <span class="nav-text">6.2 Java 并发基础原语(2) synchronized在HotSpot中的实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-Java-并发基础原语-3-unsafe-variablehandler-java-9-HotSpot中的实现"><span class="nav-number">2.6.3.</span> <span class="nav-text">6.3 Java 并发基础原语(3) unsafe/variablehandler(java 9)HotSpot中的实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-4-Java-并发基础原语-4-：LockSupport类"><span class="nav-number">2.6.4.</span> <span class="nav-text">6.4 Java 并发基础原语(4)：LockSupport类</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-J-U-C-java-util-concurrent-简述"><span class="nav-number">2.7.</span> <span class="nav-text">7. J.U.C(java.util.concurrent)简述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#7-1-J-U-C-atomic"><span class="nav-number">2.7.1.</span> <span class="nav-text">7.1 J.U.C atomic</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-2-J-U-C-核心类AQS-AbstractQueuedSynchronizer"><span class="nav-number">2.7.2.</span> <span class="nav-text">7.2 J.U.C 核心类AQS(AbstractQueuedSynchronizer)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-3-J-U-C-读写锁ReentrantReadWriteLock，"><span class="nav-number">2.7.3.</span> <span class="nav-text">7.3 J.U.C 读写锁ReentrantReadWriteLock，</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-4-J-U-C-重入锁RentrantLock"><span class="nav-number">2.7.4.</span> <span class="nav-text">7.4 J.U.C 重入锁RentrantLock</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-5-J-U-C-其他cyclicBarrier-CountDownLatch…"><span class="nav-number">2.7.5.</span> <span class="nav-text">7.5 J.U.C 其他cyclicBarrier, CountDownLatch…</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-6-J-U-C-线程池ThreadPoolExecutor-InterruptedException"><span class="nav-number">2.7.6.</span> <span class="nav-text">7.6 J.U.C 线程池ThreadPoolExecutor/InterruptedException</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-7-Thread-Runnable"><span class="nav-number">2.7.7.</span> <span class="nav-text">7.7 Thread/Runnable</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-lock-free和例子"><span class="nav-number">2.8.</span> <span class="nav-text">8. lock free和例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-实战中碰到的某些并发例子"><span class="nav-number">2.9.</span> <span class="nav-text">9. 实战中碰到的某些并发例子</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#threads和memory泄露了-死锁了-如何发现和修复"><span class="nav-number">2.9.1.</span> <span class="nav-text">threads和memory泄露了, 死锁了, 如何发现和修复</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#有趣的instanceOf例子"><span class="nav-number">2.9.2.</span> <span class="nav-text">有趣的instanceOf例子</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
   
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">柯贤达</span>
 </div>
-<div class="clearfix"></div></footer>
-  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
-<script src="/js/jquery.imagesloaded.min.js"></script>
-<script src="/js/gallery.js"></script>
 
 
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
 
 
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
-<script src="/fancybox/jquery.fancybox.pack.js"></script>
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
 <script type="text/javascript">
-(function($){
-  $('.fancybox').fancybox();
-})(jQuery);
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
 </script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
 
 </body>
 </html>
