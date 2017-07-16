@@ -343,12 +343,12 @@
       
         
           <p>儿子最近不在家, 我开机时也没人过来胡乱锤打我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻…</p>
-<p>Condition Variable是同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序. 和实习生同事小T讨论时, 谈到了两个问题:</p>
+<p>Condition Variable是个同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序. 和实习生同事小T讨论时, 谈到了两个问题:</p>
 <ol>
-<li>有了mutex, 为啥还有整个Condition variable的概念出来?</li>
-<li>Condition为什么要跟一个锁(mutex)一起用? 比如, pthread_cond_wait(cond, mutex), Java里的condition是由锁newCondion()生成.</li>
+<li>有了mutex, 为啥还要整个Condition variable的概念出来?</li>
+<li>Condition为什么要跟一个锁(mutex)一起用? 比如, pthread_cond_wait(cond, mutex), 再比如Java里的condition是由锁newCondion()生成.</li>
 </ol>
-<p>我觉得这两问题很有深度, 值得小结一下我个人的理解.<br>
+<p>我觉得这两问题很有深度, 小结一下我个人的理解.<br>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/07/15/理解并发系列-2-为什么Condition-Variable/#more" rel="contents">
@@ -650,6 +650,120 @@
             </a>
           </div>
           <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/06/17/Variable-Handles-in-Java-9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/06/17/Variable-Handles-in-Java-9/" itemprop="url">Variable Handles in Java 9</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-17T21:33:55+08:00">
+                2017-06-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>[Variable Handles][1]<br>atomic_thread_fence (std::memory_order_acquire);</p>
+<p>Using JDK 9 Memory Order Modes - Doug Lea<br>gee.cs.oswego.edu/dl/html/j9mm.html</p>
+<p><a href="https://www.infoq.com/articles/A-Post-Apocalyptic-sun.misc.Unsafe-World" target="_blank" rel="external">https://www.infoq.com/articles/A-Post-Apocalyptic-sun.misc.Unsafe-World</a></p>
+<h2 id="1-http-openjdk-java-net-jeps-193-“JEP-193-Variable-Handles”"><a href="#1-http-openjdk-java-net-jeps-193-“JEP-193-Variable-Handles”" class="headerlink" title="[1]: http://openjdk.java.net/jeps/193 “JEP 193: Variable Handles”"></a>[1]: <a href="http://openjdk.java.net/jeps/193" target="_blank" rel="external">http://openjdk.java.net/jeps/193</a> “JEP 193: Variable Handles”</h2>
+          
         
       
     </div>
@@ -1516,152 +1630,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="柯贤达">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯贤达">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2014/12/28/double-checked-locking-singleton-in-cpp11/" itemprop="url">Double-checked Locking</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-12-28T00:00:00+08:00">
-                2014-12-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：</p>
-<ol>
-<li>了解CPU的Memory Barriers机制(Paul McKenny的<a href="http://irl.cs.ucla.edu/~yingdi/web/paperreading/whymb.2010.06.07c.pdf" target="_blank" rel="external">Memory Barriers: a Hardware View for Software Hackers</a>)。了解CPU内部不同的核是怎么同步cache的，很有意思。这是理解memory order的基础。</li>
-<li>然后看Jeff Preshing的<a href="http://preshing.com" target="_blank" rel="external">blog</a>, 他的帖子深入浅出，写得非常好。</li>
-<li>《C++ Concurrency in action》, 作者是boost thread的作者。讲stl的thread的接口。</li>
-<li>再看看Herb Sutter,Hans Boehm等人的文章。 <a href="http://bartoszmilewski.com" target="_blank" rel="external">Bartosz Milewski的博客</a>也值得看看.</li>
-</ol>
-<p>double-checked locking是一个用来学习多线程的好例子。 Scott Meyers和Andrei Alexandrescu两位大牛写过一篇<a href="http://www.aristeia.com/Papers/DDJ_Jul_Aug_2004_revised.pdf" target="_blank" rel="external">paper</a>，讨论了double-checked实现的困难(Java的memeory model没有完善之前有同样的问题). Jeff Preshing写篇<a href="http://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11" target="_blank" rel="external">文章</a>讨论这个问题.</p>
-<p>看完大牛们的文章, 一步一步来动手实现一个Singleton，最后用template泛化.</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2014/12/28/double-checked-locking-singleton-in-cpp11/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1711,7 +1679,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">19</span>
+                <span class="site-state-item-count">20</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
