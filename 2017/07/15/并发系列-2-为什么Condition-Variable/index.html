@@ -1,0 +1,762 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="并发," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="儿子最近不在家, 我开机时也没人过来胡乱锤打我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻… Condition Variable是个同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序. 和实习生同事小T讨论时, 谈到了两个问题:  有了mutex, 为啥还要整个Condition">
+<meta name="keywords" content="并发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[并发系列-2] 为什么要有Condition Variable?">
+<meta property="og:url" content="http://kexianda.github.io/2017/07/15/并发系列-2-为什么Condition-Variable/index.html">
+<meta property="og:site_name" content="柯贤达">
+<meta property="og:description" content="儿子最近不在家, 我开机时也没人过来胡乱锤打我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻… Condition Variable是个同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序. 和实习生同事小T讨论时, 谈到了两个问题:  有了mutex, 为啥还要整个Condition">
+<meta property="og:image" content="http://ot49rzljt.bkt.clouddn.com/image/tech/pthread_cond_wait.png">
+<meta property="og:updated_time" content="2017-08-13T15:38:40.365Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[并发系列-2] 为什么要有Condition Variable?">
+<meta name="twitter:description" content="儿子最近不在家, 我开机时也没人过来胡乱锤打我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻… Condition Variable是个同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序. 和实习生同事小T讨论时, 谈到了两个问题:  有了mutex, 为啥还要整个Condition">
+<meta name="twitter:image" content="http://ot49rzljt.bkt.clouddn.com/image/tech/pthread_cond_wait.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://kexianda.github.io/2017/07/15/并发系列-2-为什么Condition-Variable/"/>
+
+
+
+
+
+  <title>[并发系列-2] 为什么要有Condition Variable? | 柯贤达</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">柯贤达</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">人,诗意地栖居在大地上。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/15/并发系列-2-为什么Condition-Variable/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">[并发系列-2] 为什么要有Condition Variable?</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-15T12:26:58+08:00">
+                2017-07-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>儿子最近不在家, 我开机时也没人过来胡乱锤打我的键盘了. 有空来写篇技术文章, 不是宏大的分布式大数据深度学习啥, 深入扣个细节, 就像孔乙己写”回”字, 回囘囬廻…</p>
+<p>Condition Variable是个同步原语(synchronization primitives), 用来协调不同线程的逻辑顺序. 和实习生同事小T讨论时, 谈到了两个问题:</p>
+<ol>
+<li>有了mutex, 为啥还要整个Condition variable的概念出来?</li>
+<li>Condition为什么要跟一个锁(mutex)一起用? 比如, pthread_cond_wait(cond, mutex), 再比如Java里的condition是由锁newCondion()生成.</li>
+</ol>
+<p>我觉得这两问题很有深度, 小结一下我个人的理解.<br><a id="more"></a></p>
+<h2 id="为什么要有Condition-variable概念"><a href="#为什么要有Condition-variable概念" class="headerlink" title="为什么要有Condition variable概念?"></a>为什么要有Condition variable概念?</h2><p>mutex, 就是线程们一起竞争锁, 谁拿到谁先跑. 用来保护Critical section. 比如独木桥只能过一个人, 多个人跑到河边, 竞争独木桥, 一次上一个人, 过完河再开闸过下一个. 虽然有竞争策略, 但是没有规定A一定要在B前面先过. 没有具体的次序关系.</p>
+<p>Condition, 就是线程们干活前先看看, 是否满足开始干活的条件, 不满足则让系统休眠自己.<br>生产者消费者例子是个典型. 消费者需要等到有数据, 消费者需要等到空间.<br>再比如接立赛上, 第二棒B跑道上站好准备了,但是不能跑, 没有拿到第一棒传来的交接棒, 于是等待(cond_wait), 第一棒A跑完某100米(条件满足了), 把交接棒给第二棒B(A发个signal). 第二棒B拿到了交接棒(wake up)接下去就开跑.<br>这种同步(次序的协调关系)用单纯的互斥锁实现很费劲. 用Condition variable, 对用程序员而言, 直观了很多. 这是对问题(1)的回答.</p>
+<h2 id="先看Condition-variable怎么用"><a href="#先看Condition-variable怎么用" class="headerlink" title="先看Condition variable怎么用"></a>先看Condition variable怎么用</h2><h3 id="C-C-Java的例子"><a href="#C-C-Java的例子" class="headerlink" title="C/C++/Java的例子"></a>C/C++/Java的例子</h3><p>pthread标准里是pthread_cond_t/pthread_cond_wait()/pthread_cond_signal, Java里比如ReentrantLock.newCondion(). C++是std::condition_variable.<br>Windowns上也有类似的API. 通过代码可以看到, Condition都是绑在一个锁上.<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// C, pthread API</span></div><div class="line">pthread_mutex_lock(mutex_lock);</div><div class="line"><span class="keyword">while</span>(buffer.size == <span class="number">0</span>)&#123;  </div><div class="line">   pthread_cond_wait(condition_variable, mutex_lock);</div><div class="line">&#125;</div><div class="line"><span class="comment">//...</span></div><div class="line">pthread_mutex_unlock(mutex_lock);</div><div class="line"><span class="comment">//...</span></div></pre></td></tr></table></figure></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// C++ 11.</span></div><div class="line"><span class="built_in">std</span>::unique_lock&lt;<span class="built_in">std</span>::mutex&gt; lk(mutex);</div><div class="line">cond.wait(lk, []&#123;<span class="keyword">return</span> ready;&#125;);  <span class="comment">//Equivalent to: while (!pred()) wait(lock);</span></div><div class="line"><span class="comment">//...</span></div><div class="line"></div><div class="line"><span class="comment">//cond.notify_one();</span></div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Java</span></div><div class="line">Lock lock = <span class="keyword">new</span> ReentrantLock();  </div><div class="line">Condition condition = lock.newCondition();   </div><div class="line"></div><div class="line">lock.lock();  </div><div class="line"><span class="keyword">while</span>(flag == <span class="keyword">true</span>) &#123;                </div><div class="line">    condition.await();</div><div class="line">&#125;          </div><div class="line"><span class="comment">//...</span></div></pre></td></tr></table></figure>
+<p>看代码示例, 除了Condition需要mutex配合问题, 问题(2)没回答, 还带来一个新的问题(3): <strong> condition variable wait都有个while loop, 为什么? </strong></p>
+<h2 id="Condition-wait的实现"><a href="#Condition-wait的实现" class="headerlink" title="Condition wait的实现"></a>Condition wait的实现</h2><p>看看实现, 有利于理解上面的问题.<br>Java的同步原语Condition在linux平台上HotSpot中是用pthread实现的, C++标准库也只是定义接口, 在linux平台也是pthread/NPTL实现的.<br>原理都是一回事. 所以,这里仅以glibc/NPTL为例来看实现和讨论为什么.<a href="https://www.zhihu.com/question/24116967" title="知乎里讨论pthread_cond_wait为什么要传mutex" target="_blank" rel="external">知乎里也有类似讨论</a>,可以看看.<br>我看了下glibc的代码,谈谈我的理解.</p>
+<h3 id="glibc-wait的简单流程图"><a href="#glibc-wait的简单流程图" class="headerlink" title="glibc wait的简单流程图:"></a>glibc wait的简单流程图:</h3><p>蓝色框里就是pthread_cond_wait的简化逻辑. 里面调用了linux的系统调用futex_wait,把休眠自己交出CPU, 这个也有意思,可以深入了解下, 不过这里暂且略过.</p>
+<p><img src="http://ot49rzljt.bkt.clouddn.com/image/tech/pthread_cond_wait.png" alt=""></p>
+<h3 id="glibc-JDK中的实现"><a href="#glibc-JDK中的实现" class="headerlink" title="glibc/JDK中的实现"></a>glibc/JDK中的实现</h3><p>简化了逻辑，暂且只关心最核心的基本逻辑，我加上自己的理解作为注释, 省略部分可以自己去看源码(glibc的代码太难读了…)<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// https://github.com/lattera/glibc/blob/master/nptl/pthread_cond_wait.c</span></div><div class="line"><span class="keyword">int</span></div><div class="line">__pthread_cond_wait (<span class="keyword">pthread_cond_t</span> *cond;</div><div class="line">     <span class="keyword">pthread_mutex_t</span> *mutex)</div><div class="line">&#123;</div><div class="line">   <span class="comment">// 先释放mutex, 为什么?</span></div><div class="line">   <span class="comment">// 因为要和他人,合作, 我睡眠了, 别人可以进去拿锁然后改变条件</span></div><div class="line">   err = __pthread_mutex_unlock_usercnt (mutex, <span class="number">0</span>);</div><div class="line"></div><div class="line">   <span class="keyword">do</span> &#123;</div><div class="line"></div><div class="line">     <span class="comment">// 我们准备在cond_cont-&gt;__data.__futex这个变量上 休眠自己了</span></div><div class="line"></div><div class="line">     <span class="comment">// 关键点， 有竞争</span></div><div class="line">     <span class="comment">// futex是目前线程观察到值，</span></div><div class="line">     <span class="keyword">unsigned</span> <span class="keyword">int</span> futex_val = cond-&gt;__data.__futex;</div><div class="line"></div><div class="line">     <span class="comment">// Prepare to wait.  Release the condvar futex.  </span></div><div class="line">     lll_unlock (cond-&gt;__data.__lock, pshared);</div><div class="line"></div><div class="line">     <span class="comment">// Wait until woken by signal or broadcast.  </span></div><div class="line">     <span class="comment">// 所以用户态应该将自己看到的*uaddr的值作为第二个参数传递进去，</span></div><div class="line">     <span class="comment">// futex_wait真正将进程挂起之前一定得检查lockval是否发生了变化，</span></div><div class="line">     <span class="comment">// 并且检查过程跟进程挂起的过程得放在同一个临界区中。</span></div><div class="line">     lll_futex_wait (&amp;cond-&gt;__data.__futex, futex_val, pshared);</div><div class="line">   &#125; <span class="keyword">while</span>(val == seq || cond-&gt;__data.__woken_seq == val);</div><div class="line">   <span class="comment">// why loop, 如果醒了, 但是woken_seq里并没有变化, 那么继续futex_wait的逻辑</span></div><div class="line"></div><div class="line">   <span class="comment">// 如果醒来， 立马拿mutex 锁</span></div><div class="line">   <span class="comment">// Get the mutex before returning.  </span></div><div class="line">   <span class="keyword">return</span> __pthread_mutex_cond_lock (mutex);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>熟悉JDK的话, 发现这个逻辑和J.U.C.AbstractQueuedSynchronizer.ConditionObject.await()很类似.<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</div><div class="line">    <span class="keyword">if</span> (Thread.interrupted())</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</div><div class="line">    Node node = addConditionWaiter();</div><div class="line">    <span class="keyword">int</span> savedState = fullyRelease(node);</div><div class="line">    <span class="keyword">int</span> interruptMode = <span class="number">0</span>;</div><div class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node)) &#123;</div><div class="line">        LockSupport.park(<span class="keyword">this</span>);</div><div class="line">        <span class="keyword">if</span> ((interruptMode = checkInterruptWhileWaiting(node)) != <span class="number">0</span>)</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</div><div class="line">        interruptMode = REINTERRUPT;</div><div class="line">    <span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></div><div class="line">        unlinkCancelledWaiters();</div><div class="line">    <span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</div><div class="line">        reportInterruptAfterWait(interruptMode);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h2 id="回答前面的问题"><a href="#回答前面的问题" class="headerlink" title="回答前面的问题"></a>回答前面的问题</h2><p>根据我读glibc的个人理解,</p>
+<h3 id="Condition-variable需要mutex来保护条件变量"><a href="#Condition-variable需要mutex来保护条件变量" class="headerlink" title="Condition variable需要mutex来保护条件变量"></a>Condition variable需要mutex来保护条件变量</h3><p>条件变量的判断过程不能有data racing.<br>不能发生这种情况:</p>
+<ul>
+<li>A线程里条件刚刚判断好了, 需要wait, 刚准备去加入wait queue让系统休眠自己; 就在这个间隙,被OS切换出去了.</li>
+<li>另一个B线程导致条件变化了(A其实不应该wait了), B发出signal, 因为这个时候wait queue里还没有A线程(因为A还没成功加进去呢), signal也是浪费表情,浪费掉了.</li>
+<li>然后A呢切回继续运行,准备加入condition关联的等待队列休眠自己. 然后就可能醒不过来了, 因为B不会发signal给A了.</li>
+</ul>
+<p>流程图里的(1)mutex.lock和(3)mutex.unlock保护了 (2) pred()期间, 条件不要改动.<br>这是对问题(2)的回答.</p>
+<h3 id="为什么Condition-variable-wait都有个while-loop"><a href="#为什么Condition-variable-wait都有个while-loop" class="headerlink" title="为什么Condition variable wait都有个while loop?"></a>为什么Condition variable wait都有个while loop?</h3><p>根据上面的流程图讨论, 看下面这种情况:</p>
+<ul>
+<li>A1线程在流程图(4)里wait着,  </li>
+<li>B线程完成它的任务, 把条件改了, pred()==flase了,发个signal到condition,</li>
+<li>A1从(4)醒过来, 但还没开始(5)</li>
+<li>A2线程发现条件改了, pred()==false, 不需要休眠了, 直接抢活干(6)working, 把条件又改了, 注意这时候又pred()==true了. (7)也跑完.</li>
+<li>A1如果不再次检查 pred, 是否需要睡眠, 就会在条件不满足的情况下去干(6), 而(6)必须在pred()==false,才能做. 显然出问题了.  </li>
+</ul>
+<p>这就是为什么要加个while loop. 回答了问题(3).<br>[update: 有个术语spurious wakeup描述这种情况]</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Condtion Variable是个比mutex稍复杂的原语, 这个抽象了一层的概念, 给程序员带来方便. 典型应用场景有生产者消费者.<br>有篇<a href="http://pages.cs.wisc.edu/~remzi/OSTEP/threads-cv.pdf" target="_blank" rel="external">介绍文章</a>, 里面的参考论文文献, 有空值得一看.</p>
+<h3 id="顺便一提"><a href="#顺便一提" class="headerlink" title="顺便一提,"></a>顺便一提,</h3><p>从接口上看, C++里提供重载函数, 把条件判断作为lambda传进去. 把这个while loop的必要性隐藏到接口里面去, 而不是让程序来处理. C++接口设计最优雅.<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cond.wait(mutex, []&#123;<span class="keyword">return</span> pred();&#125;);</div></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/并发/" rel="tag"># 并发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/10/并发系列-1-由wait-sleep例子开始/" rel="next" title="[并发系列-1] 由wait/sleep例子开始">
+                <i class="fa fa-chevron-left"></i> [并发系列-1] 由wait/sleep例子开始
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/" rel="prev" title="Markus K在塞维利亚街头的布鲁斯表演">
+                Markus K在塞维利亚街头的布鲁斯表演 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460"
+               alt="柯贤达" />
+          <p class="site-author-name" itemprop="name">柯贤达</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/kexianda" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要有Condition-variable概念"><span class="nav-number">1.</span> <span class="nav-text">为什么要有Condition variable概念?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先看Condition-variable怎么用"><span class="nav-number">2.</span> <span class="nav-text">先看Condition variable怎么用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#C-C-Java的例子"><span class="nav-number">2.1.</span> <span class="nav-text">C/C++/Java的例子</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition-wait的实现"><span class="nav-number">3.</span> <span class="nav-text">Condition wait的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#glibc-wait的简单流程图"><span class="nav-number">3.1.</span> <span class="nav-text">glibc wait的简单流程图:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#glibc-JDK中的实现"><span class="nav-number">3.2.</span> <span class="nav-text">glibc/JDK中的实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回答前面的问题"><span class="nav-number">4.</span> <span class="nav-text">回答前面的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Condition-variable需要mutex来保护条件变量"><span class="nav-number">4.1.</span> <span class="nav-text">Condition variable需要mutex来保护条件变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么Condition-variable-wait都有个while-loop"><span class="nav-number">4.2.</span> <span class="nav-text">为什么Condition variable wait都有个while loop?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#顺便一提"><span class="nav-number">5.1.</span> <span class="nav-text">顺便一提,</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">柯贤达</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

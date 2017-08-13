@@ -96,13 +96,13 @@
 <meta name="description" content="0. 引子实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:  sleep 不会释放锁; 而wait 会释放锁 wait要先synchronized  12345//代码片段sychronized(this) &amp;#123;  Thread.sleep();  //this.wait()&amp;#125; 打破砂锅问到底的小T不满意答案,  啥叫释放锁持有锁?">
 <meta name="keywords" content="并发">
 <meta property="og:type" content="article">
-<meta property="og:title" content="理解并发系列(1) 由wait&#x2F;sleep例子开始">
-<meta property="og:url" content="http://kexianda.github.io/2017/07/10/理解并发系列-1-由wait-sleep例子开始/index.html">
+<meta property="og:title" content="[并发系列-1] 由wait&#x2F;sleep例子开始">
+<meta property="og:url" content="http://kexianda.github.io/2017/07/10/并发系列-1-由wait-sleep例子开始/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="0. 引子实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:  sleep 不会释放锁; 而wait 会释放锁 wait要先synchronized  12345//代码片段sychronized(this) &amp;#123;  Thread.sleep();  //this.wait()&amp;#125; 打破砂锅问到底的小T不满意答案,  啥叫释放锁持有锁?">
-<meta property="og:updated_time" content="2017-07-16T15:01:08.319Z">
+<meta property="og:updated_time" content="2017-08-13T15:38:40.369Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="理解并发系列(1) 由wait&#x2F;sleep例子开始">
+<meta name="twitter:title" content="[并发系列-1] 由wait&#x2F;sleep例子开始">
 <meta name="twitter:description" content="0. 引子实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:  sleep 不会释放锁; 而wait 会释放锁 wait要先synchronized  12345//代码片段sychronized(this) &amp;#123;  Thread.sleep();  //this.wait()&amp;#125; 打破砂锅问到底的小T不满意答案,  啥叫释放锁持有锁?">
 
 
@@ -131,13 +131,13 @@
 
 
 
-  <link rel="canonical" href="http://kexianda.github.io/2017/07/10/理解并发系列-1-由wait-sleep例子开始/"/>
+  <link rel="canonical" href="http://kexianda.github.io/2017/07/10/并发系列-1-由wait-sleep例子开始/"/>
 
 
 
 
 
-  <title>理解并发系列(1) 由wait/sleep例子开始 | 柯贤达</title>
+  <title>[并发系列-1] 由wait/sleep例子开始 | 柯贤达</title>
   
 
 
@@ -256,7 +256,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/10/理解并发系列-1-由wait-sleep例子开始/">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/10/并发系列-1-由wait-sleep例子开始/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="柯贤达">
@@ -273,7 +273,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">理解并发系列(1) 由wait/sleep例子开始</h1>
+          <h1 class="post-title" itemprop="name headline">[并发系列-1] 由wait/sleep例子开始</h1>
         
 
         <div class="post-meta">
@@ -413,8 +413,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/07/09/理解concurrency系列-引子/" rel="next" title="理解concurrency系列-引子">
-                <i class="fa fa-chevron-left"></i> 理解concurrency系列-引子
+              <a href="/2017/07/09/并发系列-0-引子/" rel="next" title="[并发系列-0] -引子">
+                <i class="fa fa-chevron-left"></i> [并发系列-0] -引子
               </a>
             
           </div>
@@ -423,8 +423,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/" rel="prev" title="Markus K在塞维利亚街头的布鲁斯表演">
-                Markus K在塞维利亚街头的布鲁斯表演 <i class="fa fa-chevron-right"></i>
+              <a href="/2017/07/15/并发系列-2-为什么Condition-Variable/" rel="prev" title="[并发系列-2] 为什么要有Condition Variable?">
+                [并发系列-2] 为什么要有Condition Variable? <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -497,7 +497,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
