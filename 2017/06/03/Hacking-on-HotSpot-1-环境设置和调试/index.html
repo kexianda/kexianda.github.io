@@ -100,7 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)">
-<meta property="og:updated_time" content="2017-07-15T11:42:34.941Z">
+<meta property="og:updated_time" content="2017-08-11T15:38:36.955Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hacking on HotSpot (1) 环境设置和调试">
 <meta name="twitter:description" content="调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)">
@@ -349,7 +349,7 @@
 <h4 id="clone-repo"><a href="#clone-repo" class="headerlink" title="clone repo"></a>clone repo</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hg tclone http://hg.openjdk.java.net/jdk9/dev jdk9-dev</div></pre></td></tr></table></figure>
 <h4 id="hsdis-amd64-so"><a href="#hsdis-amd64-so" class="headerlink" title="hsdis-amd64.so"></a>hsdis-amd64.so</h4><p>这个工具不是必须的, 是用来输出运行时的汇编, 网上下载hsdis-amd64.so, 把路径添加到LD_LIBRARY_PATH.</p>
 <h2 id="1-编译OpenJDK-9"><a href="#1-编译OpenJDK-9" class="headerlink" title="1. 编译OpenJDK 9"></a>1. 编译OpenJDK 9</h2><p>在centos6上碰到不少问题, 在Ubuntu1604比较顺利, 我在多台Ubutun上都很顺利,没有碰到奇怪的问题. 相比以前的jdk7, 现在jdk9编译起来顺利多了.  先安装需要的依赖:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">sudo apt-get install libx11-dev libxext-dev libxrender-dev libxtst-dev libxt-dev</div><div class="line">sudo apt-get install libcups2-dev libfreetype6-dev libasound2-dev</div><div class="line">sudo apt-get install libelf-dev</div></pre></td></tr></table></figure></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">cd ~/jdk/jdk9-dev</div><div class="line">bash configure --with-native-debug-symbols=internal --with-debug-level=slowdebug</div><div class="line"></div><div class="line"># 或者建另一个目录</div><div class="line"># mkdir ../build &amp;&amp; cd ../build &amp;&amp; bash ../jdk9-dev/configure --with-native-debug-symbols=internal --with-debug-level=slowdebug</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">cd ~/jdk/jdk9-dev</div><div class="line">bash configure --with-native-debug-symbols=internal --with-debug-level=slowdebug</div><div class="line"></div><div class="line">make images</div><div class="line"></div><div class="line"># 或者建另一个目录</div><div class="line"># mkdir ../build &amp;&amp; cd ../build &amp;&amp; bash ../jdk9-dev/configure --with-native-debug-symbols=internal --with-debug-level=slowdebug</div></pre></td></tr></table></figure>
 <p>–with-debug-level=slowdebug 这个选项是编译debug版本.</p>
 <p>如果还缺依赖, configure时会报出来,按提示安装即可. make clean 一下再configure.<br>注意, 这些–with-xxx-xxx的参数, 可能会变, 如果报错, 去autoconf目录里grep一把, 具体解决.</p>
 <h2 id="2-调试"><a href="#2-调试" class="headerlink" title="2. 调试"></a>2. 调试</h2><h4 id="netbeans"><a href="#netbeans" class="headerlink" title="netbeans"></a>netbeans</h4><p>如果用netbeans, 用netbeans IDE打开 common/nb_native/下的netbeans工程就可以了. 右键在Projects区里的工程, 设置Debug参数, 比如<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Debug command:  $&#123;OUTPUT_PATH&#125; XxJavaApp</div></pre></td></tr></table></figure></p>
@@ -485,7 +485,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -507,7 +507,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-count">11</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

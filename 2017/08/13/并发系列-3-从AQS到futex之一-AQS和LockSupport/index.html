@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="并发," />
 
 
 
@@ -93,16 +93,17 @@
 
 
 
-<meta name="description" content="(by  胡因梦)   首先，你必须观察，仔细认清心智的活动，聆听内心和外在的声音；从其中就会产生敏感度，从敏感度之中又会产生洞见。洞见的本身就能抹除痛苦。  全然的洞察 全然的觉醒 全然的宁静 全然的愉悦  如何化解积累的负面情绪？观察自己每时每刻的念头,我们可以透过日常的冥想培养出三种心性，这三种心性我们早已俱足，不过还可以更成熟一些，它们分别是：清明、温柔与放下的能力。">
+<meta name="description" content="ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图片示意线程队列的管理(链接). 可以看Doug Lea的AQS论文(中文版). 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSupport) =&amp;gt; (">
+<meta name="keywords" content="并发">
 <meta property="og:type" content="article">
-<meta property="og:title" content="观察-聆听">
-<meta property="og:url" content="http://kexianda.github.io/2009/03/09/观察-聆听/index.html">
+<meta property="og:title" content="并发系列-3 从AQS到futex之一:AQS和LockSupport">
+<meta property="og:url" content="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="(by  胡因梦)   首先，你必须观察，仔细认清心智的活动，聆听内心和外在的声音；从其中就会产生敏感度，从敏感度之中又会产生洞见。洞见的本身就能抹除痛苦。  全然的洞察 全然的觉醒 全然的宁静 全然的愉悦  如何化解积累的负面情绪？观察自己每时每刻的念头,我们可以透过日常的冥想培养出三种心性，这三种心性我们早已俱足，不过还可以更成熟一些，它们分别是：清明、温柔与放下的能力。">
-<meta property="og:updated_time" content="2017-07-15T13:24:44.332Z">
+<meta property="og:description" content="ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图片示意线程队列的管理(链接). 可以看Doug Lea的AQS论文(中文版). 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSupport) =&amp;gt; (">
+<meta property="og:updated_time" content="2017-08-13T14:30:35.852Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="观察-聆听">
-<meta name="twitter:description" content="(by  胡因梦)   首先，你必须观察，仔细认清心智的活动，聆听内心和外在的声音；从其中就会产生敏感度，从敏感度之中又会产生洞见。洞见的本身就能抹除痛苦。  全然的洞察 全然的觉醒 全然的宁静 全然的愉悦  如何化解积累的负面情绪？观察自己每时每刻的念头,我们可以透过日常的冥想培养出三种心性，这三种心性我们早已俱足，不过还可以更成熟一些，它们分别是：清明、温柔与放下的能力。">
+<meta name="twitter:title" content="并发系列-3 从AQS到futex之一:AQS和LockSupport">
+<meta name="twitter:description" content="ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图片示意线程队列的管理(链接). 可以看Doug Lea的AQS论文(中文版). 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSupport) =&amp;gt; (">
 
 
 
@@ -130,13 +131,13 @@
 
 
 
-  <link rel="canonical" href="http://kexianda.github.io/2009/03/09/观察-聆听/"/>
+  <link rel="canonical" href="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/"/>
 
 
 
 
 
-  <title>观察-聆听 | 柯贤达</title>
+  <title>并发系列-3 从AQS到futex之一:AQS和LockSupport | 柯贤达</title>
   
 
 
@@ -255,7 +256,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2009/03/09/观察-聆听/">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="柯贤达">
@@ -272,7 +273,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">观察-聆听</h1>
+          <h1 class="post-title" itemprop="name headline">并发系列-3 从AQS到futex之一:AQS和LockSupport</h1>
         
 
         <div class="post-meta">
@@ -284,8 +285,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2009-03-09T00:00:00+08:00">
-                2009-03-09
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-13T22:31:17+08:00">
+                2017-08-13
               </time>
             
 
@@ -307,8 +308,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/读书/" itemprop="url" rel="index">
-                    <span itemprop="name">读书</span>
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
                   </a>
                 </span>
 
@@ -341,15 +342,54 @@
       
 
       
-        <p>(by  胡因梦)</p>
-<p>  首先，你必须观察，仔细认清心智的活动，聆听内心和外在的声音；从其中就会产生敏感度，从敏感度之中又会产生洞见。洞见的本身就能抹除痛苦。</p>
+        <p>ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图片示意线程队列的管理(<a href="http://blog.csdn.net/javazejian/article/details/75043422" target="_blank" rel="external">链接</a>). 可以看Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a><br>(<a href="http://ifeve.com/aqs-2/" target="_blank" rel="external">中文版</a>).</p>
+<p>从另外一个角度,继续深入一下:</p>
 <ul>
-<li>全然的洞察</li>
-<li>全然的觉醒</li>
-<li>全然的宁静</li>
-<li>全然的愉悦</li>
+<li>(JDK) J.U.C (AQS/LockSupport) =&gt;</li>
+<li>(JVM) HotSpot (Thread/Parker) 线程和block/unblock实现 =&gt;</li>
+<li>(C runtime) 到glibc中的pthread(NPTL)的实现 =&gt;</li>
+<li>(Kernel) Linux内核的线程和futex 的实现</li>
 </ul>
-<p>如何化解积累的负面情绪？观察自己每时每刻的念头,我们可以透过日常的冥想培养出三种心性，这三种心性我们早已俱足，不过还可以更成熟一些，它们分别是：清明、温柔与放下的能力。</p>
+<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 粗略的了解下各个层次的实现, 做个笔记.<br><a id="more"></a></p>
+<h2 id="AQS简述"><a href="#AQS简述" class="headerlink" title="AQS简述"></a>AQS简述</h2><p>同步器的语义其实很直观, 就是内部有个原子性的状态变量(锁变量), 同步器实现线程队列的管理和线程的block/unblock.</p>
+<ul>
+<li>同步状态(原子性)；</li>
+<li>线程的阻塞与解除阻塞；</li>
+<li>队列的管理；</li>
+</ul>
+<p>同步器的语义或API, 最核心的语义(API)就两个acquire()/release().<br>acquire():</p>
+<ul>
+<li>检查状态变量, 如果不允许, 把线程进入队列, block当前线程</li>
+<li>如果允许, 设置状态变量表示占有</li>
+</ul>
+<p>release():</p>
+<ul>
+<li>更新状态变量</li>
+<li>unblock一个或多个等待队列的线程. // LockSupport.unlock(thread);</li>
+</ul>
+<p>在J.U.C的实现中, AQS有两个队列, 一个是同步队列,线程被阻塞了,等待获取锁. 另一个是条件队列. 队列节点是内部类Node. 内部类ConditionObject用来构建条件队列，当Condition.wait()后，线程将会加入条件队列中; Condition.signal()后，线程将从条件队列转移动同步队列中进行锁竞争。</p>
+<p>在具体实现中, AQS不仅是简单的acquire和release,会更精细的API, 比如:  </p>
+<ul>
+<li>独占/共享模式的 acquire/acquireShared和release/releaseShared<br>所谓独占共享模式,得看具体的逻辑, 比如,CountDownLatch和ReentrantReadWriteLock的独占分享锁的逻辑不一样, 所以AQS需要子类自己去定义.</li>
+<li>阻塞式非阻塞式, acquire/tryAcquire<br>根据状态判断,如果不允许, acquire是block线程, tryAcquire是返回.</li>
+<li>timed mode.<br>加上时间限制, 最底层是操作系统根据时间限制唤醒线程.</li>
+</ul>
+<h2 id="同步状态的操作"><a href="#同步状态的操作" class="headerlink" title="同步状态的操作"></a>同步状态的操作</h2><p>状态在AQS里是个:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> state;</div></pre></td></tr></table></figure></p>
+<p>volatile保证可见性(内存屏障里的acquire/release语义), 32位方便原子操作.<br>compareAndSet是用unsafe.compareAndSwapInt实现.<br>在x86平台上是用 cmpxchg 指令实现, 在多核CPU还要加个lock锁下总线(老CPU), 现代的CPU上lock前缀是锁cache line.</p>
+<p>state的语义是子类按自己的逻辑定义, 可以当中一个简单布尔类型,或者不同的bit不同语义.<br>比如, 在ReentrantReadWriteLock的精巧设计中,state第16位的bit用是标识EXCLUSIVE状态.</p>
+<h2 id="阻塞-block-unblock-的实现-LockSupport"><a href="#阻塞-block-unblock-的实现-LockSupport" class="headerlink" title="阻塞(block/unblock)的实现(LockSupport)"></a>阻塞(block/unblock)的实现(LockSupport)</h2><p>LockSupport主要干两件事情:</p>
+<ul>
+<li>park/unpack(也就是block/unblock线程), 这个通过native实现, 在JVM里支持</li>
+<li>给JDK的Thread类设置 blocker, 用于监控和统计</li>
+</ul>
+<p>park()是休眠当前线程.<br>unpark(thread), 指定参数, 明确唤醒哪个线程.</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>里有段话:</p>
+<blockquote>
+<p>Method LockSupport.park blocks the current thread unless or until<br>a LockSupport.unpark has been issued. (Spurious wakeups<br>are also permitted.) Calls to unpark are not “counted”, so<br>multiple unparks before a park only unblock a single park.<br>Additionally, this applies per-thread, not per-synchronizer. A<br>thread invoking park on a new synchronizer might return<br>immediately because of a “leftover” unpark from a previous<br>usage. However, in the absence of an unpark, its next<br>invocation will block.</p>
+</blockquote>
+<p>非常拗口, 看得人头晕, 看了代码, 其实很简单.<br>JVM层实现时, parker有个counter字段, LockSupport.unpack(thread)时把counter=1. 重复调用N次也好,counter还是1. unpack调用多次也就是一次的效果.<br>LockSupport()(当前线程)时, 如果counter&gt;0(逻辑上相当于: 当前线程准备park, 发现别人已经准备唤醒我了,那么我就不休眠了), 置0,然后返回了.</p>
+<h2 id="同步队列-条件队列的管理"><a href="#同步队列-条件队列的管理" class="headerlink" title="同步队列 / 条件队列的管理"></a>同步队列 / 条件队列的管理</h2><p>需要注意一点: J.U.C的实现是自己管理线程的队列, 而不是依赖底层的锁(比如glibc的mutex/condition)来管理线程队列.<br>具体的实现逻辑比较复杂, 网上源码分析极多, 不赘述.</p>
+<p>JVM,glibc,linux层的笔记待续…</p>
 
       
     </div>
@@ -377,6 +417,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/并发/" rel="tag"># 并发</a>
+          
+        </div>
+      
 
       
       
@@ -386,8 +432,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2008/08/13/沉重的肉-二/" rel="next" title="沉重的肉身(之二)">
-                <i class="fa fa-chevron-left"></i> 沉重的肉身(之二)
+              <a href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/" rel="next" title="Markus K在塞维利亚街头的布鲁斯表演">
+                <i class="fa fa-chevron-left"></i> Markus K在塞维利亚街头的布鲁斯表演
               </a>
             
           </div>
@@ -395,10 +441,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2009/04/12/曲-惊/" rel="prev" title="曲 * 惊">
-                曲 * 惊 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -445,8 +487,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460"
@@ -519,6 +570,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#AQS简述"><span class="nav-number">1.</span> <span class="nav-text">AQS简述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步状态的操作"><span class="nav-number">2.</span> <span class="nav-text">同步状态的操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阻塞-block-unblock-的实现-LockSupport"><span class="nav-number">3.</span> <span class="nav-text">阻塞(block/unblock)的实现(LockSupport)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">3.1.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步队列-条件队列的管理"><span class="nav-number">4.</span> <span class="nav-text">同步队列 / 条件队列的管理</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
