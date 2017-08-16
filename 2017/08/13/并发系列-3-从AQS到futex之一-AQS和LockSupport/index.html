@@ -93,17 +93,17 @@
 
 
 
-<meta name="description" content="ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 可以看Doug Lea的AQS论文(中文版). 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSupport) =&amp;gt; (J">
+<meta name="description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSuppo">
 <meta name="keywords" content="并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
 <meta property="og:url" content="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 可以看Doug Lea的AQS论文(中文版). 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSupport) =&amp;gt; (J">
-<meta property="og:updated_time" content="2017-08-13T15:38:05.933Z">
+<meta property="og:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSuppo">
+<meta property="og:updated_time" content="2017-08-16T15:29:56.420Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
-<meta name="twitter:description" content="ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 可以看Doug Lea的AQS论文(中文版). 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSupport) =&amp;gt; (J">
+<meta name="twitter:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSuppo">
 
 
 
@@ -342,15 +342,16 @@
       
 
       
-        <p>ASQ(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(<a href="http://blog.csdn.net/javazejian/article/details/75043422" target="_blank" rel="external">链接</a>). 可以看Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>(<a href="http://ifeve.com/aqs-2/" target="_blank" rel="external">中文版</a>).</p>
+        <p>AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(<a href="http://blog.csdn.net/javazejian/article/details/75043422" target="_blank" rel="external">链接</a>). 也可以通过Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>(<a href="http://ifeve.com/aqs-2/" target="_blank" rel="external">中文版</a>)看看AQS的设计思想.</p>
 <p>从另外一个角度,继续深入一下:</p>
 <ul>
 <li>(JDK) J.U.C (AQS/LockSupport) =&gt;</li>
 <li>(JVM) HotSpot (Thread/Parker) 线程和block/unblock实现 =&gt;</li>
 <li>(C runtime) 到glibc中的pthread(NPTL)的实现 =&gt;</li>
-<li>(Kernel) Linux内核的线程和futex 的实现</li>
+<li>(Kernel) Linux内核的线程和futex的介绍</li>
 </ul>
-<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br><a id="more"></a></p>
+<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br>问: 整这个有用么?<br>答: 没啥用. 还是类似孔乙己写回字.</p>
+<a id="more"></a>
 <h2 id="AQS简述"><a href="#AQS简述" class="headerlink" title="AQS简述"></a>AQS简述</h2><p>同步器的语义其实很直观, 就是内部有个原子性的状态变量(锁变量), 同步器实现线程队列的管理和线程的block/unblock.</p>
 <ul>
 <li>同步状态(原子性)；</li>
@@ -368,7 +369,7 @@
 <li>unblock一个或多个等待队列的线程. // LockSupport.unpark(thread);</li>
 </ul>
 <p>在J.U.C的实现中, AQS有两个队列, 一个是同步队列,线程被阻塞了,等待获取锁. 另一个是条件队列. 队列节点是内部类Node. 内部类ConditionObject用来构建条件队列，当Condition.wait()后，线程将会加入条件队列中; Condition.signal()后，线程将从条件队列转移动同步队列中进行锁竞争。</p>
-<p>在具体实现中, AQS不仅是简单的acquire和release,会更精细的API, 比如:  </p>
+<p>在具体实现中, AQS不仅是简单的acquire和release,有更精细的API, 比如:  </p>
 <ul>
 <li>独占/共享模式的 acquire/acquireShared和release/releaseShared<br>所谓独占共享模式,得看具体的逻辑, 比如,CountDownLatch和ReentrantReadWriteLock的独占分享锁的逻辑不一样, 所以AQS需要子类自己去定义.</li>
 <li>阻塞式非阻塞式, acquire/tryAcquire<br>根据状态判断,如果不允许, acquire是block线程, tryAcquire是返回.</li>
@@ -432,8 +433,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/" rel="next" title="Markus K在塞维利亚街头的布鲁斯表演">
-                <i class="fa fa-chevron-left"></i> Markus K在塞维利亚街头的布鲁斯表演
+              <a href="/2017/08/13/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/" rel="next" title="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
+                <i class="fa fa-chevron-left"></i> [并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker
               </a>
             
           </div>
@@ -512,7 +513,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-count">22</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

@@ -1,0 +1,748 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="并发,HotSpot," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parke">
+<meta name="keywords" content="并发,HotSpot">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
+<meta property="og:url" content="http://kexianda.github.io/2017/08/13/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/index.html">
+<meta property="og:site_name" content="柯贤达">
+<meta property="og:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parke">
+<meta property="og:updated_time" content="2017-08-16T15:31:59.560Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
+<meta name="twitter:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parke">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://kexianda.github.io/2017/08/13/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/"/>
+
+
+
+
+
+  <title>[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker | 柯贤达</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">柯贤达</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">人,诗意地栖居在大地上。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/13/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-13T00:00:00+08:00">
+                2017-08-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:</p>
+<ul>
+<li>HotSpot的Thread/JavaThread类的简介</li>
+<li>HotSpot的Parker的实现细节<a id="more"></a>
+</li>
+</ul>
+<h2 id="HotSpot的Thread-JavaThread"><a href="#HotSpot的Thread-JavaThread" class="headerlink" title="HotSpot的Thread/JavaThread"></a>HotSpot的Thread/JavaThread</h2><p>HotSpot里的Thread类对应着一个OS的Thread, JavaThread类继承字Thread, JavaThread实例对应着一个Java层的Thread.<br>所以, 在Java层的Thread, 在操作系统上对应一个thread, linux上就是一个轻量级task.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// thread.hpp</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Thread</span> &#123;</span></div><div class="line"></div><div class="line">  <span class="comment">// OS data associated with the thread</span></div><div class="line">  OSThread* _osthread;  <span class="comment">// Platform-specific thread information</span></div><div class="line"></div><div class="line">  ParkEvent * _ParkEvent;    <span class="comment">// for synchronized()</span></div><div class="line">  ParkEvent * _SleepEvent;   <span class="comment">// for Thread.sleep</span></div><div class="line"></div><div class="line">  <span class="comment">// JSR166 per-thread parker</span></div><div class="line">  Parker*    _parker;</div><div class="line">  <span class="comment">// 略...</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">JavaThread</span>:</span> <span class="keyword">public</span> Thread &#123;</div><div class="line">  <span class="comment">// 指向Java Thread实例,</span></div><div class="line">  <span class="comment">//oop是HotSpot里指向一个Java level的实例, 一个gc对象.</span></div><div class="line">  oop            _threadObj; <span class="comment">// The Java level thread ,</span></div><div class="line">  JavaFrameAnchor _anchor;   <span class="comment">// Encapsulation of current java frame and it state</span></div><div class="line">  CompiledMethod*   _deopt_nmethod; <span class="comment">// CompiledMethod that is currently being deoptimized</span></div><div class="line"></div><div class="line">  <span class="comment">//</span></div><div class="line">  <span class="keyword">volatile</span> JavaThreadState _thread_state;</div><div class="line"></div><div class="line">  <span class="comment">// 非常多,略...</span></div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>Thread类里有两个ParkEvent和一个Parker, 其实ParkEvent和Parker实现和功能都类似,只是源码没有重构而已. 一个是给实现synchronized关键字用的, 一个是给Thread.sleep/wait用的. parker是用来实现J.U.C的park/unpark(阻塞/唤醒).<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">// A word of caution: The JVM uses 2 very similar constructs:</div><div class="line">// 1. ParkEvent are used for Java-level &quot;monitor&quot; synchronization.</div><div class="line">// 2. Parkers are used by JSR166-JUC park-unpark.</div></pre></td></tr></table></figure></p>
+<p>JavaThread和Java的线程一一对应, 成员变量oop _threadObj指向Java层的thread对象.<br>OSThread是通过os::create_thread()创建, 最后还是调用POSIX phtread, glibc在linux平台上就是fork一个轻量级task.<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//thread.cpp</span></div><div class="line">os::create_thread(<span class="keyword">this</span>, thr_type, stack_sz);</div><div class="line"></div><div class="line"><span class="comment">//linux_os.cpp</span></div><div class="line"><span class="keyword">pthread_t</span> tid;</div><div class="line"><span class="keyword">int</span> ret = pthread_create(&amp;tid, &amp;attr, (<span class="keyword">void</span>* (*)(<span class="keyword">void</span>*)) thread_native_entry, thread);</div></pre></td></tr></table></figure></p>
+<h2 id="HotSpot的Parker"><a href="#HotSpot的Parker" class="headerlink" title="HotSpot的Parker"></a>HotSpot的Parker</h2><p>LockSupport是调用Unsafe_Park/Unsafe_unpark, unsafe只是调用parker.park()(另,还收集trace/profile信息). 看看Parker:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//park.hpp</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Parker</span> :</span> <span class="keyword">public</span> os::PlatformParker &#123; <span class="comment">/*略...*/</span> &#125;;</div><div class="line"></div><div class="line"><span class="comment">//os_linux.hpp</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">PlatformParker</span> &#123;</span></div><div class="line"> <span class="keyword">pthread_mutex_t</span> _mutex[<span class="number">1</span>];</div><div class="line"></div><div class="line"> <span class="comment">//一个是给park用, 另一个是给parkUntil用</span></div><div class="line"> <span class="keyword">pthread_cond_t</span>  _cond[<span class="number">2</span>]; <span class="comment">// one for relative times and one for abs.</span></div><div class="line"> <span class="comment">//略...</span></div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>常见用pthread写多线程程序, 一般来说是多个线程竞争mutex/cond变量, 把线程队列的管理的逻辑扔给mutex/cond去做, 底层的glibc或linux kernel做线程队列的管理. 而在HotSpot里, 每个JavaThread实例里都自己的pthread mutex/cond变量.  </p>
+<p>那么问题是:</p>
+<ol>
+<li>为什么这么整?</li>
+<li>每个线程有自己的mutex, 那哪来的有竞争呢?</li>
+</ol>
+<p>1, JDK中的LockSupport只是用来block(park,阻塞)/unblock(unpark,唤醒)线程, 线程队列的管理是JDK的AQS处理的. 从Java层来看, 只需要mutex/cond提供个操作系统的block/unblock API即可.</p>
+<p>2, 但是, 实现时, 竞争还是有的, 比如当前线程某thread_a.park()时, 而另外一个线程thread_b.unpark(thread_a), 这时候, 对于thread_a的mutex来说有竞争的.<br>只不过, 对于JDK而言, 可以透明,只是需要关注block/unblock是阻塞/唤醒了线程操作.</p>
+<p>不同系统实现不一样, 从Parker::park的代码可以看到, 这里的data racing主要是处理: 如果别的线程在unpark它的情况.<br>只看Linux的(已经删掉一些不是核心逻辑的代码, 我加了自己的理解,写在注释里):<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line">void Parker::park(bool isAbsolute, jlong time) &#123;</div><div class="line"></div><div class="line">  //  如果别的线程已经unblock了我.  </div><div class="line">  //  这里并没有拿到mutex的锁, 需要Atomic::xchg和barrier保证lock-free代码的正确.</div><div class="line">  // We depend on Atomic::xchg() having full barrier semantics</div><div class="line">  // since we are doing a lock-free update to _counter.</div><div class="line">  if (Atomic::xchg(0, &amp;_counter) &gt; 0) return;</div><div class="line"></div><div class="line">  // safepoint region相关, 我对细节不详.</div><div class="line">  // safepoint region大致的了解, 见RednaxelaFX的回答https://www.zhihu.com/question/29268019</div><div class="line">  ThreadBlockInVM tbivm(jt);</div><div class="line"></div><div class="line">  // 如果别的线程正在unblock我, 而持有了mutex, 我先返回了,没有必要在_mutex上等</div><div class="line">  if (Thread::is_interrupted(thread, false) || pthread_mutex_trylock(_mutex) != 0) &#123;</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // 如果别的线程已经unblock了我, no wait needed</div><div class="line">  // 已经拿到了mutex, 所以不需要和前面一样Atomic::xchg了.</div><div class="line">  int status;</div><div class="line">  if (_counter &gt; 0)  &#123;</div><div class="line">    _counter = 0;</div><div class="line">    status = pthread_mutex_unlock(_mutex);</div><div class="line">    OrderAccess::fence();</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // 记录线程的状态</div><div class="line">  OSThreadWaitState osts(thread-&gt;osthread(), false /* not Object.wait() */);</div><div class="line">  jt-&gt;set_suspend_equivalent();</div><div class="line">  // cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()</div><div class="line"></div><div class="line">  // 这一坨, 就是block自己这个线程了.(Java层当前执行的线程)</div><div class="line">  if (time == 0) &#123;</div><div class="line">    _cur_index = REL_INDEX; // arbitrary choice when not timed</div><div class="line">    status = pthread_cond_wait(&amp;_cond[_cur_index], _mutex);</div><div class="line">  &#125; else &#123;</div><div class="line">    _cur_index = isAbsolute ? ABS_INDEX : REL_INDEX;</div><div class="line">    status = pthread_cond_timedwait(&amp;_cond[_cur_index], _mutex, &amp;absTime);</div><div class="line">  &#125;</div><div class="line">  _cur_index = -1;</div><div class="line"></div><div class="line">  // 已经从block住状态中恢复返回了, 把_counter设0.</div><div class="line">  _counter = 0;</div><div class="line">  status = pthread_mutex_unlock(_mutex);</div><div class="line"></div><div class="line">  // 要保证多线程的正确性要十二分小心</div><div class="line">  // 这里的memory fence 是一个lock addl 指令, 加上compiler_barrier</div><div class="line">  // 保证_counter = 0 是对调用unlock线程是可见的.</div><div class="line">  // Paranoia to ensure our locked and lock-free paths interact</div><div class="line">  // correctly with each other and Java-level accesses.</div><div class="line">  OrderAccess::fence();</div><div class="line"></div><div class="line">  // 已经醒过来, 但如果有别人在suspend我,那么继续suspend自己.</div><div class="line">  // If externally suspended while waiting, re-suspend</div><div class="line">  if (jt-&gt;handle_special_suspend_equivalent_condition()) &#123;</div><div class="line">    jt-&gt;java_suspend_self();</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>再看unpark, B线程唤醒A线程, 是B调用了A的parker::unpark()(搜Unsafe_Unpark的代码).<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> Parker::unpark() &#123;</div><div class="line">  <span class="keyword">int</span> status = pthread_mutex_lock(_mutex);</div><div class="line">  <span class="keyword">const</span> <span class="keyword">int</span> s = _counter;</div><div class="line">  _counter = <span class="number">1</span>;</div><div class="line">  <span class="comment">// must capture correct index before unlocking</span></div><div class="line">  <span class="keyword">int</span> index = _cur_index;</div><div class="line">  status = pthread_mutex_unlock(_mutex);</div><div class="line">  <span class="keyword">if</span> (s &lt; <span class="number">1</span> &amp;&amp; index != <span class="number">-1</span>) &#123;</div><div class="line">    <span class="comment">// thread is definitely parked</span></div><div class="line">    status = pthread_cond_signal(&amp;_cond[index]);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>Parker::unpark()比较简单, 设置_counter=1, 并unlock mutex和cond_signal.<br>_counter不会增加, 设死为1. 这就是Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>里说’Calls to unpark are not “counted”.</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/并发/" rel="tag"># 并发</a>
+          
+            <a href="/tags/HotSpot/" rel="tag"># HotSpot</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/" rel="next" title="Markus K在塞维利亚街头的布鲁斯表演">
+                <i class="fa fa-chevron-left"></i> Markus K在塞维利亚街头的布鲁斯表演
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/" rel="prev" title="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
+                [并发系列-3] 从AQS到futex(一): AQS和LockSupport <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460"
+               alt="柯贤达" />
+          <p class="site-author-name" itemprop="name">柯贤达</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/kexianda" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HotSpot的Thread-JavaThread"><span class="nav-number">1.</span> <span class="nav-text">HotSpot的Thread/JavaThread</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HotSpot的Parker"><span class="nav-number">2.</span> <span class="nav-text">HotSpot的Parker</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">柯贤达</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
