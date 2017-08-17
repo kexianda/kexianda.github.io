@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="并发,HotSpot," />
+  <meta name="keywords" content="HotSpot,并发," />
 
 
 
@@ -93,17 +93,17 @@
 
 
 
-<meta name="description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parke">
-<meta name="keywords" content="并发,HotSpot">
+<meta name="description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 通过HotSpot(Java 9)的源码来粗略的看看JVM这层的实现:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parker的实现细节">
+<meta name="keywords" content="HotSpot,并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
 <meta property="og:url" content="http://kexianda.github.io/2017/08/16/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parke">
-<meta property="og:updated_time" content="2017-08-16T17:08:33.256Z">
+<meta property="og:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 通过HotSpot(Java 9)的源码来粗略的看看JVM这层的实现:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parker的实现细节">
+<meta property="og:updated_time" content="2017-08-17T13:19:54.355Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
-<meta name="twitter:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parke">
+<meta name="twitter:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 通过HotSpot(Java 9)的源码来粗略的看看JVM这层的实现:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parker的实现细节">
 
 
 
@@ -342,7 +342,7 @@
       
 
       
-        <p>J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:</p>
+        <p>J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 通过HotSpot(Java 9)的源码来粗略的看看JVM这层的实现:</p>
 <ul>
 <li>HotSpot的Thread/JavaThread类的简介</li>
 <li>HotSpot的Parker的实现细节<a id="more"></a>
@@ -394,9 +394,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/并发/" rel="tag"># 并发</a>
-          
             <a href="/tags/HotSpot/" rel="tag"># HotSpot</a>
+          
+            <a href="/tags/并发/" rel="tag"># 并发</a>
           
         </div>
       
@@ -418,6 +418,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/" rel="prev" title="[并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现">
+                [并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -489,7 +493,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">23</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

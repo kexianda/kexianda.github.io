@@ -253,6 +253,148 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/" itemprop="url">[并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-17T00:00:00+08:00">
+                2017-08-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p><a href="http://kexianda.info/2017/08/16/%E5%B9%B6%E5%8F%91%E7%B3%BB%E5%88%97-4-%E4%BB%8EAQS%E5%88%B0futex-%E4%BA%8C-JVM%E7%9A%84Thread%E5%92%8CParker/" target="_blank" rel="external">上篇笔记</a>大致看了Java同步互斥机制在JVM层的实现. HotSpot在Linux平台是用pthread实现. 这篇继续对glibc(NPTL)在Linux平台上如何实现mutex和condition做个笔记.<br>glibc的源码极其难读, 因为要处理平台区别,性能优化,特殊情况处理等等, 源码的可读性不在大神们的考虑之列. 这里不是逐行源码解读, 列出来的代码都不是glibc的原版代码, 改动和简化了, 类伪码了,方便理解, 也把我的理解作为注释放在代码里.  </p>
+<ul>
+<li>pthread_mutex_t和lock/unlock操作,</li>
+<li>low level lock的汇编实现, 最为tricky的地方</li>
+<li>pthread_cond_t和wait/signal.
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/16/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -342,7 +484,7 @@
 
       
         
-          <p>J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 在HotSpot JVM层, 一个OS Thread对应java层的一个线程,  LockSupport通过unsafe的park/unpark实现阻塞/唤醒线程. 通过HotSpot(Java 9)的源码来看看:</p>
+          <p>J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 通过HotSpot(Java 9)的源码来粗略的看看JVM这层的实现:</p>
 <ul>
 <li>HotSpot的Thread/JavaThread类的简介</li>
 <li>HotSpot的Parker的实现细节
@@ -1527,144 +1669,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/05/19/进程-线程-协程的实现原理/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="柯贤达">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯贤达">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/05/19/进程-线程-协程的实现原理/" itemprop="url">进程/线程/协程的实现原理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-19T00:00:00+08:00">
-                2017-05-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>看了篇<a href="http://www.infoq.com/cn/articles/CplusStyleCorourtine-At-Wechat" target="_blank" rel="external">微信后台异步化改造的文章</a>, libco协程库加上epoll处理高并发. 企鹅厂是C++控, 后台用C++. 微信这种高并发, 见识了协程的用途. C/C++语言不提供协程的语义. 听过有人用setjmp/longjmp或ucontext实现协程, 一直对这种用户态切换没细看, 估计和操作系统切换进程类似, tss保存起来. 好奇心起, 趁机了解一下协程的实现, 同时整理一下进程/线程的原理.<br>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/05/19/进程-线程-协程的实现原理/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1714,7 +1718,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">23</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
