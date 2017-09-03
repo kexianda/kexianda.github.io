@@ -100,7 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2017/07/10/并发系列-1-由wait-sleep例子开始/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="0. 引子实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:  sleep 不会释放锁; 而wait 会释放锁 wait要先synchronized  12345//代码片段sychronized(this) &amp;#123;  Thread.sleep();  //this.wait()&amp;#125; 打破砂锅问到底的小T不满意答案,  啥叫释放锁持有锁?">
-<meta property="og:updated_time" content="2017-08-13T15:38:40.369Z">
+<meta property="og:updated_time" content="2017-09-03T01:46:45.890Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[并发系列-1] 由wait&#x2F;sleep例子开始">
 <meta name="twitter:description" content="0. 引子实习生同事小T和我讨论, Java里的wait和sleep区别, 他网上一查, 答案大概都是:  sleep 不会释放锁; 而wait 会释放锁 wait要先synchronized  12345//代码片段sychronized(this) &amp;#123;  Thread.sleep();  //this.wait()&amp;#125; 打破砂锅问到底的小T不满意答案,  啥叫释放锁持有锁?">
@@ -354,7 +354,7 @@
 <li>线程怎么放弃或拿到CPU的时间切片  <a id="more"></a>
 </li>
 </ul>
-<h2 id="1-简单问题-啥叫持有锁-释放锁-阻塞队列-啥叫锁"><a href="#1-简单问题-啥叫持有锁-释放锁-阻塞队列-啥叫锁" class="headerlink" title="1. 简单问题: 啥叫持有锁,释放锁,阻塞队列? 啥叫锁?"></a>1. 简单问题: 啥叫持有锁,释放锁,阻塞队列? 啥叫锁?</h2><h3 id="非常粗糙的说"><a href="#非常粗糙的说" class="headerlink" title="非常粗糙的说,"></a>非常粗糙的说,</h3><p>所谓锁是: 某个flag(某字段) + 用来管理线程的对列.<br>A线程持有锁的过程, A线程发现flag没人标记, 那它来标记好, flag你现在是大A我的人了, 别人看到会自己滚开, 大A线程可以继续欢快的干活了.<br>阻塞队列: 比如说,小B线程恰好也来查看一下flag, 发现flag已有归宿, 那么小B就无奈的跑到某个线程队列里, 且告诉操作系统,我暂时不跑CPU了,默默在队列里等待机会.<br>释放锁: 意思是, 大A线程干完活, 把flag自己留下标记擦干净. 留给别人来抢了. 要不要放啥队列,看需求<br>所谓继续持有锁, 在上面的代码例子就是, sleep后, flag里继续保持自己的标记, 别人过来,自动闪开.</p>
+<h2 id="1-简单问题-啥叫持有锁-释放锁-阻塞队列-啥叫锁"><a href="#1-简单问题-啥叫持有锁-释放锁-阻塞队列-啥叫锁" class="headerlink" title="1. 简单问题: 啥叫持有锁,释放锁,阻塞队列? 啥叫锁?"></a>1. 简单问题: 啥叫持有锁,释放锁,阻塞队列? 啥叫锁?</h2><h3 id="非常粗糙的说"><a href="#非常粗糙的说" class="headerlink" title="非常粗糙的说,"></a>非常粗糙的说,</h3><p>所谓锁是: 某个flag(锁变量) + 用来管理线程的对列.<br>A线程持有锁的过程, A线程发现flag没人标记, 那它来标记好, flag你现在是大A我的人了, 别人看到会自己滚开, A线程可以继续欢快的干活了.<br>阻塞队列: 比如说,小B线程恰好也来查看一下flag, 发现flag已有归宿, 那么小B就无奈的跑到某个线程队列里, 且告诉操作系统,我暂时不跑CPU了,默默在队列里等待机会.<br>释放锁: 意思是, 大A线程干完活, 把flag自己留下标记擦干净. 留给别人来抢了. 要不要放啥队列,看需求<br>所谓继续持有锁, 在上面的代码例子就是, sleep后, flag里继续保持自己的标记, 别人过来,自动闪开.</p>
 <h3 id="稍微详细一点儿说"><a href="#稍微详细一点儿说" class="headerlink" title="稍微详细一点儿说,"></a>稍微详细一点儿说,</h3><p>Java的synchronized会编译成monitorenter/monitorexit两条bytecode. 具体的语义, JVM来翻译实现.</p>
 <p>这里synchronized的锁, 是个monitor(在HotSpot是ObjectMonitor类), monitor里有个owner字段, 表示谁拥有它, monitor里有线程队列(更准确的讲有两个_EntryList和_WaitSet).<br>A线程设置owner字段为自己, 持有了锁.<br>B过来后看到owner已经被A线程占有了,默默的去_EntryList里等着, 让操作系统阻塞自己.<br>A线程活没干完但缺少啥东西了, 自己在这个monitor上wait()一把, 进入_WaitSet队列, 让操作系统阻塞自己, 把owner字段设置为null, 释放了锁. 或者是A干完活, 执行monitorexit, 把owner字段清掉, 释放锁.</p>
 <p>为什么整两个队列_EntryList和_WaitSet?  因为Object.notify()的时候, 把_WaitSet里线程放到_EntryList里做好下一次抢占锁的准备.</p>
@@ -497,7 +497,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -519,7 +519,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

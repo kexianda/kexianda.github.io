@@ -253,6 +253,144 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/" itemprop="url">[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-19T00:00:00+08:00">
+                2017-08-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p><a href="https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf" target="_blank" rel="external">Futex(Fast Userspace muTexes)</a>,是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -342,7 +480,7 @@
 
       
         
-          <p><a href="http://kexianda.info/2017/08/16/%E5%B9%B6%E5%8F%91%E7%B3%BB%E5%88%97-4-%E4%BB%8EAQS%E5%88%B0futex-%E4%BA%8C-JVM%E7%9A%84Thread%E5%92%8CParker/" target="_blank" rel="external">上篇笔记</a>大致看了Java同步互斥机制在JVM层的实现. HotSpot在Linux平台是用pthread实现. 这篇继续对glibc(NPTL)在Linux平台上如何实现mutex和condition做个笔记.<br>glibc的源码极其难读, 因为要处理平台区别,性能优化,特殊情况处理等等, 源码的可读性不在大神们的考虑之列. 这里不是逐行源码解读, 列出来的代码都不是glibc的原版代码, 改动和简化了, 类伪码了,方便理解, 也把我的理解作为注释放在代码里.  </p>
+          <p><a href="http://kexianda.info/2017/08/16/%E5%B9%B6%E5%8F%91%E7%B3%BB%E5%88%97-4-%E4%BB%8EAQS%E5%88%B0futex-%E4%BA%8C-JVM%E7%9A%84Thread%E5%92%8CParker/" target="_blank" rel="external">上篇笔记</a>大致看了Java同步互斥机制在JVM层的实现. HotSpot在Linux平台是用pthread实现. 这篇继续对glibc(NPTL)在Linux平台上如何实现mutex和condition做个笔记.<br>glibc的源码极其难读, 因为要处理平台区别,性能优化,特殊情况处理等等, 源码的可读性不在大神们的考虑之列. 这里不是逐行源码解读, 列出来的代码都不是glibc的原版代码, 改动和简化了方便理解.  </p>
 <ul>
 <li>pthread_mutex_t和lock/unlock操作,</li>
 <li>low level lock的汇编实现, 最为tricky的地方</li>
@@ -626,14 +764,14 @@
       
         
           <p>AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(<a href="http://blog.csdn.net/javazejian/article/details/75043422" target="_blank" rel="external">链接</a>). 也可以通过Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>(<a href="http://ifeve.com/aqs-2/" target="_blank" rel="external">中文版</a>)看看AQS的设计思想.</p>
-<p>从另外一个角度,继续深入一下:</p>
+<p>从另外一个角度,纵向的深入一下:</p>
 <ul>
 <li>(JDK) J.U.C (AQS/LockSupport) =&gt;</li>
 <li>(JVM) HotSpot (Thread/Parker) 线程和block/unblock实现 =&gt;</li>
 <li>(C runtime) 到glibc中的pthread(NPTL)的实现 =&gt;</li>
 <li>(Kernel) Linux内核的线程和futex的介绍</li>
 </ul>
-<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br>问: 整这个有用么?<br>答: 没啥用. 还是类似孔乙己写回字.</p>
+<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br>问: 整这个有用么?<br>答: 可能没啥具体作用. 还是类似孔乙己写回字.</p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/#more" rel="contents">
@@ -771,7 +909,7 @@
 
       
         
-          <p>再听<a href="http://www.markus-k.com/" target="_blank" rel="external">Markus K</a>的布鲁斯, 还是很好听.<br>去年去塞维利亚参加ApacheCon, 最后一天的下午阳光很好,上街瞎逛. 碰到了Markus K的街头表演. 水准很高, 就像J.J. Cale, Eric Clapton在现场表演. 这是我近年来听到最好听的音乐(之一), 很喜欢这种风格的布鲁斯.<br>Markus K is busking on the street in Seville(手机录的,效果很差):<br>
+          <p>再听<a href="http://www.markus-k.com/" target="_blank" rel="external">Markus K</a>的布鲁斯, 还是很好听.<br>去年去塞维利亚参加ApacheCon, 最后一天的下午阳光很好,上街瞎逛. 碰到了Markus K的街头表演. 这是我近年来听到最好听的音乐(之一), 很喜欢这种风格的布鲁斯.<br>Markus K is busking on the street in Seville(手机录的,效果很差):<br>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/#more" rel="contents">
@@ -1209,7 +1347,7 @@
 <li>深入程度怎么把握, 细节蔓延的太多, 会不会影响条理和简洁.  </li>
 </ol>
 <p>比如对互斥锁信号量等锁的理解: 就是一个状态变量/原子操作,另一个是线程阻塞/唤醒队列的管理,很简单. 但是如果打破砂锅问到底, 可以对细节很深入了解. 比如Java的ReentrantReadWriteLock, 实现里有个sync(用作同步), 需要了解AbstractQueuedSynchronizer类以及primitive LockSupport/UNSAFE的实现. 继续深入, 看去看JVM是如何用pthread_cond_t/pthread_mutex_t等pthread api实现的; 再深入, pthread(glibc的NPTL)又是怎么做的(glibc的代码非常非常的难读). 继续没完没了, 再深入就需要理解NPTL的基础即Linux系统调用futex, 再深入就看futex在内核是怎样实现的. 也许没有必要关注所有细节, 但了解各个层次实现的核心逻辑还是很有好处的.<br>还有, 比如用java的线程池ThreadPoolExecute, 如何处理InterruptedException, 以及为什么要这么处理, interupt到底怎么回事, 在JVM层怎么实现?操作系统里怎么回事?</p>
-<p>要把这些知识整理得深入浅出是要水平的,很花精力和时间. 我非常认同左耳朵耗子说的, 技术文章要写得在马桶上拉屎时都能看懂才是好文章:-) 但这其实要求很高,要有深入理解和很好的有条理的表达. 而我水平有限, 有些技术点研究也不够深入, 精力和时间也不够,也不知道能写的怎么样,能写多少, 不管怎样, 先列个提纲, 以后有空慢慢写, 不是很清楚的细节, 可以边写边研究.</p>
+<p>要把这些知识整理得深入浅出是要水平的,很花精力和时间. 我非常认同左耳朵耗子说的, 技术文章要写得在马桶上拉屎时都能看懂才是好文章:-) 但这其实要求很高,要有深入理解和很好的有条理的表达. 而我水平和精力都有限, 先随便瞎写, 权作笔记了. 可读性和条理有空再整理.</p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/07/09/并发系列-0-引子/#more" rel="contents">
@@ -1531,144 +1669,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/05/30/由WannaCry蠕虫说说密码学原语/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="柯贤达">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯贤达">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/05/30/由WannaCry蠕虫说说密码学原语/" itemprop="url">由WannaCry蠕虫说说密码学原语</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-30T00:00:00+08:00">
-                2017-05-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.<br>由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?<br>再探究一下AES算法的硬件加速和优化的工程实现。<br>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/05/30/由WannaCry蠕虫说说密码学原语/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1718,7 +1718,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1740,7 +1740,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

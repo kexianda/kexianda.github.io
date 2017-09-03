@@ -93,17 +93,17 @@
 
 
 
-<meta name="description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSuppo">
+<meta name="description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,纵向的深入一下:  (JDK) J.U.C (AQS/LockSupp">
 <meta name="keywords" content="并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
 <meta property="og:url" content="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSuppo">
-<meta property="og:updated_time" content="2017-08-16T15:29:56.420Z">
+<meta property="og:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,纵向的深入一下:  (JDK) J.U.C (AQS/LockSupp">
+<meta property="og:updated_time" content="2017-09-03T01:52:11.025Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
-<meta name="twitter:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,继续深入一下:  (JDK) J.U.C (AQS/LockSuppo">
+<meta name="twitter:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,纵向的深入一下:  (JDK) J.U.C (AQS/LockSupp">
 
 
 
@@ -343,14 +343,14 @@
 
       
         <p>AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(<a href="http://blog.csdn.net/javazejian/article/details/75043422" target="_blank" rel="external">链接</a>). 也可以通过Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>(<a href="http://ifeve.com/aqs-2/" target="_blank" rel="external">中文版</a>)看看AQS的设计思想.</p>
-<p>从另外一个角度,继续深入一下:</p>
+<p>从另外一个角度,纵向的深入一下:</p>
 <ul>
 <li>(JDK) J.U.C (AQS/LockSupport) =&gt;</li>
 <li>(JVM) HotSpot (Thread/Parker) 线程和block/unblock实现 =&gt;</li>
 <li>(C runtime) 到glibc中的pthread(NPTL)的实现 =&gt;</li>
 <li>(Kernel) Linux内核的线程和futex的介绍</li>
 </ul>
-<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br>问: 整这个有用么?<br>答: 没啥用. 还是类似孔乙己写回字.</p>
+<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br>问: 整这个有用么?<br>答: 可能没啥具体作用. 还是类似孔乙己写回字.</p>
 <a id="more"></a>
 <h2 id="AQS简述"><a href="#AQS简述" class="headerlink" title="AQS简述"></a>AQS简述</h2><p>同步器的语义其实很直观, 就是内部有个原子性的状态变量(锁变量), 同步器实现线程队列的管理和线程的block/unblock.</p>
 <ul>
@@ -517,7 +517,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -539,7 +539,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

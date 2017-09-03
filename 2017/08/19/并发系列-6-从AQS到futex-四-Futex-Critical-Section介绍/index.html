@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="并发,glibc,kernel," />
 
 
 
@@ -93,16 +93,19 @@
 
 
 
-<meta name="description" content="萨特的存在主义的五个核心是：自由、焦虑、选择、担当、孤独。我们渴望自由，身体的自由，灵魂的自由——在现实面前，我们因为不得自由而焦虑——为了改变我们的焦虑，我们必须有所改变有所选择——选择之后，我们必须担当起我们所选择后要面对的一切问题——而到最后，我们会发现，原来世界之大，我们每个人都必须在孤独中承担起属于我们自己的喜怒哀乐。每一个人都可以自我选择，自我设计，自我造就。每一个人都是绝对自由的，每">
+<meta name="description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
+<meta name="keywords" content="并发,glibc,kernel">
 <meta property="og:type" content="article">
-<meta property="og:title" content="自由-选择-担当">
-<meta property="og:url" content="http://kexianda.github.io/2007/12/24/自由-选择-担当/index.html">
+<meta property="og:title" content="[并发系列-6] 从AQS到futex(四): Futex&#x2F;Critical Section介绍">
+<meta property="og:url" content="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="萨特的存在主义的五个核心是：自由、焦虑、选择、担当、孤独。我们渴望自由，身体的自由，灵魂的自由——在现实面前，我们因为不得自由而焦虑——为了改变我们的焦虑，我们必须有所改变有所选择——选择之后，我们必须担当起我们所选择后要面对的一切问题——而到最后，我们会发现，原来世界之大，我们每个人都必须在孤独中承担起属于我们自己的喜怒哀乐。每一个人都可以自我选择，自我设计，自我造就。每一个人都是绝对自由的，每">
-<meta property="og:updated_time" content="2017-09-02T04:39:53.023Z">
+<meta property="og:description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
+<meta property="og:image" content="https://static.lwn.net/images/ns/kernel/dvh-futexes.png">
+<meta property="og:updated_time" content="2017-09-03T02:02:31.508Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="自由-选择-担当">
-<meta name="twitter:description" content="萨特的存在主义的五个核心是：自由、焦虑、选择、担当、孤独。我们渴望自由，身体的自由，灵魂的自由——在现实面前，我们因为不得自由而焦虑——为了改变我们的焦虑，我们必须有所改变有所选择——选择之后，我们必须担当起我们所选择后要面对的一切问题——而到最后，我们会发现，原来世界之大，我们每个人都必须在孤独中承担起属于我们自己的喜怒哀乐。每一个人都可以自我选择，自我设计，自我造就。每一个人都是绝对自由的，每">
+<meta name="twitter:title" content="[并发系列-6] 从AQS到futex(四): Futex&#x2F;Critical Section介绍">
+<meta name="twitter:description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
+<meta name="twitter:image" content="https://static.lwn.net/images/ns/kernel/dvh-futexes.png">
 
 
 
@@ -130,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="http://kexianda.github.io/2007/12/24/自由-选择-担当/"/>
+  <link rel="canonical" href="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/"/>
 
 
 
 
 
-  <title>自由-选择-担当 | 柯贤达</title>
+  <title>[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍 | 柯贤达</title>
   
 
 
@@ -255,7 +258,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2007/12/24/自由-选择-担当/">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="柯贤达">
@@ -272,7 +275,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">自由-选择-担当</h1>
+          <h1 class="post-title" itemprop="name headline">[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍</h1>
         
 
         <div class="post-meta">
@@ -284,8 +287,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2007-12-24T00:00:00+08:00">
-                2007-12-24
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-19T00:00:00+08:00">
+                2017-08-19
               </time>
             
 
@@ -307,8 +310,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/读书/" itemprop="url" rel="index">
-                    <span itemprop="name">读书</span>
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
                   </a>
                 </span>
 
@@ -341,7 +344,28 @@
       
 
       
-        <p>萨特的存在主义的五个核心是：自由、焦虑、选择、担当、孤独。<br>我们渴望自由，身体的自由，灵魂的自由——在现实面前，我们因为不得自由而焦虑——为了改变我们的焦虑，我们必须有所改变有所选择——选择之后，我们必须担当起我们所选择后要面对的一切问题——而到最后，我们会发现，原来世界之大，我们每个人都必须在孤独中承担起属于我们自己的喜怒哀乐。<br>每一个人都可以自我选择，自我设计，自我造就。每一个人都是绝对自由的，每一个人也都应该为自己的行为负责。</p>
+        <p><a href="https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf" target="_blank" rel="external">Futex(Fast Userspace muTexes)</a>,是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.<br><a id="more"></a></p>
+<h2 id="Overview-what-amp-why"><a href="#Overview-what-amp-why" class="headerlink" title="Overview(what &amp; why)"></a>Overview(what &amp; why)</h2><p>顾名思义，Futex锁变量是在userspace中. Linux从2.5.7开始支持Futex.<br>其设计理由基于两点：</p>
+<ul>
+<li>很多同步是无竞争的，一个线程进入临界区然后退出临界区，这个过程往往并没有线程来竞争。Java的synchronized在JVM中的偏向锁轻量级锁的优化也是基于此理由.</li>
+<li>陷入内核的成本其实是很高的. 比如Linux系统调用的VSDO优化就是为了避免陷入内核.之前的*nix系统中，进程间同步机制是通过对kernel object的操作来完成，读写锁对象而陷入内核，成本很高。</li>
+</ul>
+<p>粗略的来讲，从应用程序角度看，一个线程去拿锁，通过原子的test-and-set(cmpxchg())指令去看锁变量，如果没有其他线程持有此锁变量。那么当前线程设置锁变量，因为锁变量在用户空间，不需要陷入内核，此时内核对此一无所知。 如果下一个线程在前一个线程持有锁变量的时候，也来拿锁，发现已经被别人持有，那么，需要调用futex系统调用传FUTEX_WAIT参数，让系统把我这个线程休眠在futex的锁变量上， 内核会线程休眠，同事建立相关的数据结构(futex_q/futex_queues)关联用户空间的锁变量(uaddr)和线程. 如果锁持有者释放锁的时候，把锁变量设置，并调用sys_futex，传FUTEX_WAKE参数。</p>
+<p>释放锁的时候，如果没有其他线程阻塞在锁变量上，其实没有必要调用sys_tutex, 这是个优化，可以看<a href="https://cis.temple.edu/~giorgio/cis307/readings/futex.pdf" target="_blank" rel="external">Futexes Are Tricky</a>文中的mutex3实现。在glibc中有个flage FUTEX_WAITERS作用类似。</p>
+<h2 id="实现-how"><a href="#实现-how" class="headerlink" title="实现(how)"></a>实现(how)</h2><p>接口：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">futex</span> <span class="params">(<span class="keyword">int</span> *uaddr, <span class="keyword">int</span> op, <span class="keyword">int</span> val, <span class="keyword">const</span> struct timespec *timeout,<span class="keyword">int</span> *uaddr2, <span class="keyword">int</span> val3)</span></span>;</div></pre></td></tr></table></figure></p>
+<p>常用前四个参数。第三个val传进去的就是futex变量(锁变量)。因为内核需要再次检查val，保证正确性。为什么呢?</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">if (futex_var is true)    // (1)</div><div class="line">    futex(uaddr, FUTEX_WAIT, futex_var) (2)</div></pre></td></tr></table></figure>
+<p>在(1)(2)之间，如果futex_var发生了变化,其实不用休眠线程了，如果内核futex实现不再次检查futex_var,把线程休眠可能再也醒不过来了。</p>
+<p>在内核中通过一个哈希表来维护所有挂起阻塞在futex变量上的task，不同的futex变量会根据其地址标识计算出一个hash key定位到一个哈希桶链上，阻塞在同一个futex变量的所有task会挂到同一个哈希桶链上：<br>(转张图,一图胜千言):<br><img src="https://static.lwn.net/images/ns/kernel/dvh-futexes.png" alt=""></p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>要写正确的并发库其实是非常困难的，tricky的地方很多。一般来说，应用开发不需要直接用sys_futex. C runtime如glibc里都已经基于futex实现了mutex cond等等(具体实现比较tricky,<a href="http://kexianda.info/2017/08/17/%E5%B9%B6%E5%8F%91%E7%B3%BB%E5%88%97-5-%E4%BB%8EAQS%E5%88%B0futex%E4%B8%89-glibc-NPTL-%E7%9A%84mutex-cond%E5%AE%9E%E7%8E%B0/" target="_blank" rel="external">这里</a>有简单介绍)</p>
+<p>可以写个小程序，用strace来观察用到的系统调用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">strace -c a.out</div></pre></td></tr></table></figure></p>
+<h2 id="Windows平台呢"><a href="#Windows平台呢" class="headerlink" title="Windows平台呢?"></a>Windows平台呢?</h2><p>Windows平台有Mutex和Critical Section，Mutex是kernel object，而Critical Section是user object. 细节可看<a href="https://blogs.msdn.microsoft.com/ce_base/2007/03/26/critical-section-vs-mutex/" target="_blank" rel="external">critical_section vs mutex</a>.</p>
+<p>有人在windows平台做了<a href="http://preshing.com/20111124/always-use-a-lightweight-mutex/" target="_blank" rel="external">micro benchmark</a>, 二者性能相差40~50倍。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考:"></a>参考:</h2><ol>
+<li><a href="https://lwn.net/Articles/360699/" target="_blank" rel="external">Futex Overview</a>  </li>
+<li><a href="http://preshing.com/20111124/always-use-a-lightweight-mutex" target="_blank" rel="external">Always use a lightweight mutex</a></li>
+<li>[Linux Futex浅析] (<a href="http://blog.sina.com.cn/s/blog_e59371cc0102v29b.html" target="_blank" rel="external">http://blog.sina.com.cn/s/blog_e59371cc0102v29b.html</a>)</li>
+</ol>
 
       
     </div>
@@ -369,6 +393,16 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/并发/" rel="tag"># 并发</a>
+          
+            <a href="/tags/glibc/" rel="tag"># glibc</a>
+          
+            <a href="/tags/kernel/" rel="tag"># kernel</a>
+          
+        </div>
+      
 
       
       
@@ -378,15 +412,15 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/" rel="next" title="[并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现">
+                <i class="fa fa-chevron-left"></i> [并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2008/03/25/沉重的肉(一)/" rel="prev" title="沉重的肉身(之一)">
-                沉重的肉身(之一) <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -433,8 +467,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460"
@@ -507,6 +550,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Overview-what-amp-why"><span class="nav-number">1.</span> <span class="nav-text">Overview(what & why)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现-how"><span class="nav-number">2.</span> <span class="nav-text">实现(how)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实践"><span class="nav-number">3.</span> <span class="nav-text">实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Windows平台呢"><span class="nav-number">4.</span> <span class="nav-text">Windows平台呢?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考:</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
