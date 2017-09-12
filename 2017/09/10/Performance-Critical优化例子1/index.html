@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="汇编优化," />
 
 
 
@@ -93,16 +93,17 @@
 
 
 
-<meta name="description" content="刘小枫&amp;lt;沉重的肉身&amp;gt;　之一：　刘喜欢捏造词汇，但不算诘屈聱牙。   很多时候人不易把握自己的欲望，而且因为个体人的欲望想象的实现可能性是多样的，个体人没有能力知道，哪一种可能性是自己的欲望想象的真实实现.  “欲望想象的实现”不能把握，甚至连”欲望”对象的真实都不能把握。那些是你真的需要的，那些是你真的渴求的？一种欲望或者一种情结可能只是自我麻醉的精神鸦片。   一个欲望想象既可能这样">
+<meta name="description" content="搬砖时, 很少碰到需要写发挥CPU极致性能的代码. 一般而言, 软件系统的性能瓶颈在上层的架构或算法,IO,内存带宽上. 对CPU优化的工作都一般都是编译器,虚拟机和底层各种runtime来处理.当瓶颈在CPU上时, 比如特定领域的加密/压缩/视频图形解码等, 汇编优化很重要. 在大数据/云时代那些大规模部署的分布式程序能有个百分之几的优化省下不少的服务器, 一些关键的hotspot函数还是值得优">
+<meta name="keywords" content="汇编优化">
 <meta property="og:type" content="article">
-<meta property="og:title" content="沉重的肉身(之一)">
-<meta property="og:url" content="http://kexianda.github.io/2008/03/25/沉重的肉(一)/index.html">
+<meta property="og:title" content="Performance-Critical优化例子(1)">
+<meta property="og:url" content="http://kexianda.github.io/2017/09/10/Performance-Critical优化例子1/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="刘小枫&amp;lt;沉重的肉身&amp;gt;　之一：　刘喜欢捏造词汇，但不算诘屈聱牙。   很多时候人不易把握自己的欲望，而且因为个体人的欲望想象的实现可能性是多样的，个体人没有能力知道，哪一种可能性是自己的欲望想象的真实实现.  “欲望想象的实现”不能把握，甚至连”欲望”对象的真实都不能把握。那些是你真的需要的，那些是你真的渴求的？一种欲望或者一种情结可能只是自我麻醉的精神鸦片。   一个欲望想象既可能这样">
-<meta property="og:updated_time" content="2017-09-03T01:40:14.194Z">
+<meta property="og:description" content="搬砖时, 很少碰到需要写发挥CPU极致性能的代码. 一般而言, 软件系统的性能瓶颈在上层的架构或算法,IO,内存带宽上. 对CPU优化的工作都一般都是编译器,虚拟机和底层各种runtime来处理.当瓶颈在CPU上时, 比如特定领域的加密/压缩/视频图形解码等, 汇编优化很重要. 在大数据/云时代那些大规模部署的分布式程序能有个百分之几的优化省下不少的服务器, 一些关键的hotspot函数还是值得优">
+<meta property="og:updated_time" content="2017-09-12T12:23:06.874Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="沉重的肉身(之一)">
-<meta name="twitter:description" content="刘小枫&amp;lt;沉重的肉身&amp;gt;　之一：　刘喜欢捏造词汇，但不算诘屈聱牙。   很多时候人不易把握自己的欲望，而且因为个体人的欲望想象的实现可能性是多样的，个体人没有能力知道，哪一种可能性是自己的欲望想象的真实实现.  “欲望想象的实现”不能把握，甚至连”欲望”对象的真实都不能把握。那些是你真的需要的，那些是你真的渴求的？一种欲望或者一种情结可能只是自我麻醉的精神鸦片。   一个欲望想象既可能这样">
+<meta name="twitter:title" content="Performance-Critical优化例子(1)">
+<meta name="twitter:description" content="搬砖时, 很少碰到需要写发挥CPU极致性能的代码. 一般而言, 软件系统的性能瓶颈在上层的架构或算法,IO,内存带宽上. 对CPU优化的工作都一般都是编译器,虚拟机和底层各种runtime来处理.当瓶颈在CPU上时, 比如特定领域的加密/压缩/视频图形解码等, 汇编优化很重要. 在大数据/云时代那些大规模部署的分布式程序能有个百分之几的优化省下不少的服务器, 一些关键的hotspot函数还是值得优">
 
 
 
@@ -130,13 +131,13 @@
 
 
 
-  <link rel="canonical" href="http://kexianda.github.io/2008/03/25/沉重的肉(一)/"/>
+  <link rel="canonical" href="http://kexianda.github.io/2017/09/10/Performance-Critical优化例子1/"/>
 
 
 
 
 
-  <title>沉重的肉身(之一) | 柯贤达</title>
+  <title>Performance-Critical优化例子(1) | 柯贤达</title>
   
 
 
@@ -255,7 +256,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2008/03/25/沉重的肉(一)/">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/09/10/Performance-Critical优化例子1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="柯贤达">
@@ -272,7 +273,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">沉重的肉身(之一)</h1>
+          <h1 class="post-title" itemprop="name headline">Performance-Critical优化例子(1)</h1>
         
 
         <div class="post-meta">
@@ -284,8 +285,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2008-03-25T00:00:00+08:00">
-                2008-03-25
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-10T00:00:00+08:00">
+                2017-09-10
               </time>
             
 
@@ -307,8 +308,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/读书/" itemprop="url" rel="index">
-                    <span itemprop="name">读书</span>
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
                   </a>
                 </span>
 
@@ -341,14 +342,27 @@
       
 
       
-        <p>刘小枫&lt;沉重的肉身&gt;　之一：　<br>刘喜欢捏造词汇，但不算诘屈聱牙。</p>
-<p><strong>  很多时候人不易把握自己的欲望，而且因为个体人的欲望想象的实现可能性是多样的，个体人没有能力知道，哪一种可能性是自己的欲望想象的真实实现. </strong></p>
-<p>“欲望想象的实现”不能把握，甚至连”欲望”对象的真实都不能把握。那些是你真的需要的，那些是你真的渴求的？一种欲望或者一种情结可能只是自我麻醉的精神鸦片。</p>
-<p><strong>  一个欲望想象既可能这样实现，也可能那样实现，就像一个人穿过一片树林，他只能走一条道路，而不能同时走几条不同的道路。一个人的生命只有一次，但一次的生命本来有想象中无限多的生活可能性。当欲望想象面对各种可能性时，只能选择其中的一种可能性，别的所有可能性就被放弃（或用哲学语言说否定）了。 </strong></p>
-<p>这就像昆德拉的比喻，人生就是第一排练。</p>
-<p><strong>  欲望想象的实现与可能性、随之与在可选择的可能性中的选择是不可分的，个体人并没有能力知道哪个选择是最好的，只能相信某个选择是最好的，如果个体人不愿意像古代智者教导的那样，放弃或限制欲望想象，只是选择相对的绝对物的话。于是，个体欲望的任何选择都是一次生命的冒险。一个女人要找这世界上最好或自己最喜欢的男人做丈夫，她唯有相信自己碰到并选择了的这个男人是这个世界上最好或自己最喜欢的男人，她的这一欲望想象才会圆满；而实际上，在这个世界上有比这个男人更好或更让她喜欢的男人的可能性始终存在。 </strong></p>
-<p>男人也是如此，不仅感情，生活工作等等都是一次又一次的冒险选择。换种表述，用计算机术语比喻，这就是一个贪婪算法搜索模型。像高数的极大值和最大值概念，贪婪算法得到结果是局部最优，但不能保证是全局最优解，有的情况，需求全局最优解是NP复杂度，没有意义.</p>
-<p><strong>  相信在这里为可能性的选择提供信念性支撑，可以让人不至于心死于遗憾。要是一个人在可能性面前老是选择不定，就会因为生命时刻的延误而患上致死的忧郁症。<br>  自由伦理的艰难也在于选择幸福时的艰难。</strong></p>
+        <p>搬砖时, 很少碰到需要写发挥CPU极致性能的代码. 一般而言, 软件系统的性能瓶颈在上层的架构或算法,IO,内存带宽上. 对CPU优化的工作都一般都是编译器,虚拟机和底层各种runtime来处理.<br>当瓶颈在CPU上时, 比如特定领域的加密/压缩/视频图形解码等, 汇编优化很重要. 在大数据/云时代那些大规模部署的分布式程序能有个百分之几的优化省下不少的服务器, 一些关键的hotspot函数还是值得优化一下. 有时候得汇编加持, 追求极致性能.</p>
+<p>一些汇编的奇技淫巧, 对日常搬砖没啥作用. 但因此而去了解一下CPU的front-end对我们用高级语言(C/C++/Java)搬高性能代码有些好处.<br>闲扯下, 比如Spark/Impala等的code-gen, 就有Cache-aware的优化. 指令cache L1在现代x86CPU上是32K. 一个简单的表达式evaluation如果调用多次虚函数, 32K指令cache L1命中率就低了. 生成的代码减少虚函数调用, 除了减少访问内存次数, 有更好Locality, 指令cache L1命中率提升很多, 能带来提升巨大的性能. Spark的Tungsten项目之前, CPU居然也是性能瓶颈,计算浪费太大.</p>
+<a id="more"></a>
+<p>粗糙的列下CPU的front-end和features的一些有用的点:</p>
+<ul>
+<li>各个cache level的大小和访问时间,</li>
+<li>out-of-order window</li>
+<li>ILP, 指令间的并行,往往能带来几倍的性能提升.</li>
+<li>分支预测</li>
+<li>取码/解码</li>
+<li>数据/指令的对齐(alignment)</li>
+<li>SIMD等features: SSE/AVX/AVX2, 以及在牙膏厂最新CPU(Skylake)的AVX512</li>
+</ul>
+<p>最近在优化memcpy, 小结下需要那些奇技淫巧:<br>x86上,不同指令的时钟周期成本是不一样的(x86), 甚至同一个指令,在不同mirco-architecture下的成本也是不一样, 需要查牙膏厂的software developer’s manuals. 其实CPU底层的实现非常非常的复杂, 硬件对于码农是一个黑盒, 手册上往往也是寥寥数语, 这种就十分头疼了.</p>
+<ul>
+<li>跳转表, 对不同长度对于不同代码,直接跳转到特定逻辑, 减少长度判断/跳转(jmp)次数, 减少branch-prediction失败次数. 编译器在优化switch-case时也是这么干的.</li>
+<li>不同长度采取不同算法, 比如rep movsb在新的CPU上性能不错, 适合一定长度的内存拷贝, 但是rep movsb指令在CPU硬件层准备成本较高, 太短的内存拷贝就不划算了. 这个特性过于的依赖特定平台了.</li>
+<li>预取数据到cache. prefetcht0/prefetcht1/prefetcht2/prefetchnta指令. CPU的Cache是CPU硬件管理的,这几个指令对CPU而言是个hint. 如何更好的使用,提前多久预取数据, intel手册对此没有详细解释.</li>
+<li>较大数据拷贝时, 写时不污染CPU Cache. 往内存写数据时,一般先读入cpu cache, 写入cache,再写入内存. 如果数据不需要cache起来, 可以直接写入内存, CPU会把写入的数据合并成块写入. 所以这时候x86的strong内存模型就不”strong”了, 需要内存屏障store fence(sfence指令).</li>
+</ul>
+<p>(待续…)</p>
 
       
     </div>
@@ -376,6 +390,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/汇编优化/" rel="tag"># 汇编优化</a>
+          
+        </div>
+      
 
       
       
@@ -385,8 +405,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2007/12/24/自由-选择-担当/" rel="next" title="自由-选择-担当">
-                <i class="fa fa-chevron-left"></i> 自由-选择-担当
+              <a href="/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/" rel="next" title="[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍">
+                <i class="fa fa-chevron-left"></i> [并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍
               </a>
             
           </div>
@@ -394,10 +414,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2008/04/12/隐机而坐/" rel="prev" title="隐机而坐">
-                隐机而坐 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
