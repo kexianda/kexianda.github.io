@@ -102,7 +102,7 @@
 <meta property="og:description" content="搬砖时, 很少碰到需要写发挥CPU极致性能的代码. 一般而言, 软件系统的性能瓶颈在上层的架构或算法,IO,内存带宽上. 对CPU优化的工作都一般都是编译器,虚拟机和底层各种runtime来处理.当瓶颈在CPU上时, 比如特定领域的加密/压缩/视频图形解码等, 汇编优化很重要. 在大数据/云时代那些大规模部署的分布式程序能有个百分之几的优化省下不少的服务器, 一些关键的hotspot函数还是值得优">
 <meta property="og:image" content="https://software.intel.com/sites/default/files/did_feeds_images/6E3B86B7-8072-4E6A-9E27-0CD21446ACB1/6E3B86B7-8072-4E6A-9E27-0CD21446ACB1-imageId=92436631-C87A-402A-9EBD-12E8BA82D8B2.png">
 <meta property="og:image" content="https://img.purch.com/500-png/w/755/aHR0cDovL21lZGlhLmJlc3RvZm1pY3JvLmNvbS9SL1MvNjkxNzY4L29yaWdpbmFsLzUwMC5QTkc=">
-<meta property="og:updated_time" content="2017-09-13T11:26:12.134Z">
+<meta property="og:updated_time" content="2017-09-14T12:24:53.161Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Performance-Critical的优化例子(1)">
 <meta name="twitter:description" content="搬砖时, 很少碰到需要写发挥CPU极致性能的代码. 一般而言, 软件系统的性能瓶颈在上层的架构或算法,IO,内存带宽上. 对CPU优化的工作都一般都是编译器,虚拟机和底层各种runtime来处理.当瓶颈在CPU上时, 比如特定领域的加密/压缩/视频图形解码等, 汇编优化很重要. 在大数据/云时代那些大规模部署的分布式程序能有个百分之几的优化省下不少的服务器, 一些关键的hotspot函数还是值得优">
@@ -357,9 +357,10 @@
 <li>分支预测</li>
 <li>取码/解码</li>
 <li>数据/指令的对齐(alignment)</li>
+<li>write buffer (Write Combining)</li>
 <li>SIMD等features: SSE/AVX/AVX2, 以及在牙膏厂最新CPU(Skylake)的AVX512</li>
 </ul>
-<p>最近一个项目需要在最新的Xeon Skylake上优化memcpy, 小结下需要那些奇技淫巧:<br>x86上,不同指令的时钟周期成本可能不同(x86), 甚至同一个指令,在不同mirco-architecture下的成本也可能不一样, 需要查牙膏厂的software developer’s manuals. 其实CPU底层的实现非常非常的复杂, 硬件对于码农是一个黑盒, 手册上往往也是寥寥数语, 这种就十分头疼了.</p>
+<p>最近整最新CPU Xeon Skylake上的memcpy. (注: glibc和ctr已经做的非常好了, 我自己整的版本改善不大)<br>小结下需要那些奇技淫巧:<br>x86上,不同指令的时钟周期成本可能不同(x86), 甚至同一个指令,在不同mirco-architecture下的成本也可能不一样, 需要查牙膏厂的software developer’s manuals. 其实CPU底层的实现非常非常的复杂, 硬件对于码农是一个黑盒, 手册上往往也是寥寥数语, 这种就十分头疼了.</p>
 <ul>
 <li>跳转表, 对不同长度对于不同代码,直接跳转到特定逻辑, 减少长度判断/跳转(jmp)次数, 减少branch-prediction失败次数. 编译器在优化switch-case时也是这么干的.</li>
 <li>不同长度采取不同算法, 比如rep movsb在新的CPU上性能不错, 适合一定长度的内存拷贝, 但是rep movsb指令在CPU硬件层准备成本较高, 太短的内存拷贝就不划算了. 这个特性过于的依赖特定平台了.</li>
