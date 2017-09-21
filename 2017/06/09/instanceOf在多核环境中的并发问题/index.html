@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="HotSpot,并发," />
+  <meta name="keywords" content="并发,HotSpot," />
 
 
 
@@ -93,17 +93,17 @@
 
 
 
-<meta name="description" content="同事分享了通过profiling发现的高并发性能问题, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:  Scala Scalability Issue instanceOf在HotSpot中的实现和优化 CPU Cache thrashing / NUMA    从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识">
-<meta name="keywords" content="HotSpot,并发">
+<meta name="description" content="开源社区报出来的两个高并发性能问题很有意思, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:  Scala Scalability Issue instanceOf在HotSpot中的实现和优化 CPU Cache thrashing / NUMA    从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思,">
+<meta name="keywords" content="并发,HotSpot">
 <meta property="og:type" content="article">
 <meta property="og:title" content="instanceOf在多核环境中的并发问题">
 <meta property="og:url" content="http://kexianda.github.io/2017/06/09/instanceOf在多核环境中的并发问题/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="同事分享了通过profiling发现的高并发性能问题, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:  Scala Scalability Issue instanceOf在HotSpot中的实现和优化 CPU Cache thrashing / NUMA    从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识">
-<meta property="og:updated_time" content="2017-09-02T04:39:53.015Z">
+<meta property="og:description" content="开源社区报出来的两个高并发性能问题很有意思, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:  Scala Scalability Issue instanceOf在HotSpot中的实现和优化 CPU Cache thrashing / NUMA    从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思,">
+<meta property="og:updated_time" content="2017-09-21T11:18:32.950Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="instanceOf在多核环境中的并发问题">
-<meta name="twitter:description" content="同事分享了通过profiling发现的高并发性能问题, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:  Scala Scalability Issue instanceOf在HotSpot中的实现和优化 CPU Cache thrashing / NUMA    从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识">
+<meta name="twitter:description" content="开源社区报出来的两个高并发性能问题很有意思, 一个Spark的性能问题 和一个Cassandra的性能问题, 涉及到:  Scala Scalability Issue instanceOf在HotSpot中的实现和优化 CPU Cache thrashing / NUMA    从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思,">
 
 
 
@@ -342,13 +342,13 @@
       
 
       
-        <p>同事分享了通过profiling发现的高并发性能问题, <a href="https://www.slideshare.net/SparkSummit/accelerating-spark-genome-sequencing-in-clouda-data-driven-approach-case-studies-and-beyond-spark-summit-east-talk-by-lucy-lu-and-eric-kaczmarek" target="_blank" rel="external">一个Spark的性能问题</a> 和<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787" target="_blank" rel="external">一个Cassandra的性能问题</a>, 涉及到:</p>
+        <p>开源社区报出来的两个高并发性能问题很有意思, 一个<a href="https://www.slideshare.net/SparkSummit/accelerating-spark-genome-sequencing-in-clouda-data-driven-approach-case-studies-and-beyond-spark-summit-east-talk-by-lucy-lu-and-eric-kaczmarek" target="_blank" rel="external">Spark的性能问题</a> 和一个<a href="https://issues.apache.org/jira/browse/CASSANDRA-12787" target="_blank" rel="external">Cassandra的性能问题</a>, 涉及到:</p>
 <ul>
 <li>Scala Scalability Issue</li>
 <li>instanceOf在HotSpot中的实现和优化</li>
 <li>CPU Cache thrashing / NUMA  </li>
 </ul>
-<p>从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思, 对写高并发高性能代码有启发, 我把涉及到的知识拓展和小结一下.<br><a id="more"></a></p>
+<p>从应用层(大数据)到JVM(HotSpot)instanceOf的实现, 再到CPU的硬件机制, 涉及到知识很有意思, 是一个很典型的问题, 对用Java/C++写多核心的高并发代码有启发, 把涉及到的知识拓展和小结一下.<br><a id="more"></a></p>
 <h2 id="1-CPU-Cache-amp-Thrashing-amp-NUMA"><a href="#1-CPU-Cache-amp-Thrashing-amp-NUMA" class="headerlink" title="1. CPU Cache &amp; Thrashing &amp; NUMA"></a>1. CPU Cache &amp; Thrashing &amp; NUMA</h2><h4 id="Intel-x86-CPU-Cache"><a href="#Intel-x86-CPU-Cache" class="headerlink" title="Intel x86 CPU Cache"></a>Intel x86 CPU Cache</h4><p>首先看看现代的x86 CPU访问不同layer数据的时间, 先有个感性认识.  </p>
 <table>
 <thead>
@@ -431,9 +431,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/HotSpot/" rel="tag"># HotSpot</a>
-          
             <a href="/tags/并发/" rel="tag"># 并发</a>
+          
+            <a href="/tags/HotSpot/" rel="tag"># HotSpot</a>
           
         </div>
       
@@ -552,7 +552,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
