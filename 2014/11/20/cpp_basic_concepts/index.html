@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -100,6 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2014/11/20/cpp_basic_concepts/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="这篇先简单讨论C++中的几个basic concepts: lvalue, rvalue，lvalue reference, rvalue reference，cv-qualified, reference collapsing rule等等。这是理解template argument deduction的基础。">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-02T04:39:53.015Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="C++ basic concepts (1)">
@@ -137,7 +138,7 @@
 
 
 
-  <title>C++ basic concepts (1) | 柯贤达</title>
+  <title>C++ basic concepts (1) | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -162,7 +163,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -403,7 +404,7 @@
 <p>glvalue和rvalue就不谈，可看ISO的标准文档。到现在，看下面例子，应该很好理解了。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span>   <span class="title">prvalue</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span>&amp;  <span class="title">lvalue</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span>&amp;&amp; <span class="title">xvalue</span><span class="params">()</span></span>;</div></pre></td></tr></table></figure>
 <p>有一点需要注意，<strong>“class rvalues can have cv-qualified types, but built-in types (like int) can’t ”</strong> 在研究tempalte argument deduction的时候，这一点曾让我迷惑过，虽然现在看起来比较自然，看代码：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Foo</span> &#123;</span>&#125;;</div><div class="line"></div><div class="line"><span class="function">Foo <span class="title">f</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo(); &#125;</div><div class="line"><span class="function"><span class="keyword">const</span> Foo <span class="title">cf</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo(); &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">b</span><span class="params">()</span> </span>&#123;<span class="keyword">int</span> i=<span class="number">0</span>; <span class="keyword">return</span> i;&#125;; <span class="comment">//return built-in type rvalue</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">int</span> <span class="title">cb</span><span class="params">()</span> </span>&#123;<span class="keyword">int</span> i=<span class="number">0</span>; <span class="keyword">return</span> i;&#125; <span class="comment">// try to add const</span></div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">g</span><span class="params">(T&amp;&amp; t)</span> </span>&#123;&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span> <span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">        g (f());   <span class="comment">//calls: g&lt;Foo&gt;(Foo&amp;&amp;)</span></div><div class="line">        g (cf());  <span class="comment">//calls: g&lt;Foo const&gt;(Foo const&amp;&amp;).</span></div><div class="line">        g (b());   <span class="comment">//calls: g&lt;int&gt;(int&amp;&amp;)</span></div><div class="line">        g (cb());  <span class="comment">//calls: g&lt;int&gt;(int&amp;&amp;) Notice:no const version!</span></div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Foo</span> &#123;</span>&#125;;</div><div class="line"></div><div class="line"><span class="function">Foo <span class="title">f</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo(); &#125;</div><div class="line"><span class="function"><span class="keyword">const</span> Foo <span class="title">cf</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> Foo(); &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">b</span><span class="params">()</span> </span>&#123;<span class="keyword">int</span> i=<span class="number">0</span>; <span class="keyword">return</span> i;&#125;; <span class="comment">//return built-in type rvalue</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">int</span> <span class="title">cb</span><span class="params">()</span> </span>&#123;<span class="keyword">int</span> i=<span class="number">0</span>; <span class="keyword">return</span> i;&#125; <span class="comment">// try to add const</span></div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="function"><span class="keyword">void</span> <span class="title">g</span><span class="params">(T&amp;&amp; t)</span> </span>&#123;&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span> <span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">        g (f());   <span class="comment">//calls: g&lt;Foo&gt;(Foo&amp;&amp;)</span></div><div class="line">        g (cf());  <span class="comment">//calls: g&lt;Foo const&gt;(Foo const&amp;&amp;).</span></div><div class="line">        g (b());   <span class="comment">//calls: g&lt;int&gt;(int&amp;&amp;)</span></div><div class="line">        g (cb());  <span class="comment">//calls: g&lt;int&gt;(int&amp;&amp;) Notice:no const version!</span></div><div class="line">        <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>若不理解T是咋deduce出来的，可暂且不管. 通过对比，至少可以得出built-in type rvalue没有cv-qualifiyed版本。</p>
 <h2 id="2-C-Types"><a href="#2-C-Types" class="headerlink" title="2. C++ Types"></a>2. C++ Types</h2><p>C++的Types分为三种：<strong>Fundamental types</strong>, <strong>Compound Types</strong>, <strong>CV-qualifiers</strong><br><strong>Fundamental types:</strong>是指bool, int, char 等等。</p>
 <p><strong>Compound Types:</strong>包括：</p>
@@ -557,7 +558,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -579,7 +580,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -759,7 +760,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

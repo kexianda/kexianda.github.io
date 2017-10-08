@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -100,6 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2014/12/28/double-checked-locking-singleton-in-cpp11/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="在学习C++11多线程的时候，会碰到一大堆概念，mutex, lock, atomic, memory model, memory barrier， lock-free等。要更好的理解，可以：  了解CPU的Memory Barriers机制(Paul McKenny的Memory Barriers: a Hardware View for Software Hackers)。了解CPU内部不同的">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-02T04:39:53.015Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Double-checked Locking">
@@ -137,7 +138,7 @@
 
 
 
-  <title>Double-checked Locking | 柯贤达</title>
+  <title>Double-checked Locking | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -162,7 +163,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -375,7 +376,7 @@
 </ul>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">| LoadLoad  | LoadStore  |</div><div class="line">| StoreLoad | StoreStore |</div></pre></td></tr></table></figure>
 <p>而x86 CPU不需要barrier就能保证 LoadLoad, LoadStore, StoreStore, 所以, x86平台上acquire/release都不需要内存屏障指令. 这就是为什么编译后没有了mfence指令.<br>那，为什么代码里还要memory_order_relaxed、memory_order_release呢？ 因为它们是语言层次上的抽象，可以阻止编译器的指令re-order. 同时保证了不同CPU平台的可移植性,在ARM， PowerPC等平台会生成对应的指令。</p>
-<h3 id="5-用Template泛化"><a href="#5-用Template泛化" class="headerlink" title="5. 用Template泛化"></a>5. 用Template泛化</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;mutex&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;atomic&gt;</span></span></div><div class="line"></div><div class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></div><div class="line"><span class="keyword">private</span>:</div><div class="line">	<span class="keyword">static</span> atomic&lt;T*&gt; m_instance;</div><div class="line">	<span class="keyword">static</span> mutex	m_mutex;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">	<span class="function"><span class="keyword">static</span> T* <span class="title">getInstance</span> <span class="params">()</span> </span>;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; atomic&lt;T*&gt; Singleton&lt;T&gt;::m_instance;</div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; mutex	Singleton&lt;T&gt;::m_mutex;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; T* Singleton&lt;T&gt;::getInstance () &#123;</div><div class="line">		T* tmp = m_instance.load(<span class="built_in">std</span>::memory_order_acquire);</div><div class="line">		<span class="comment">//atomic_thread_fence (std::memory_order_acquire);</span></div><div class="line">		<span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>)	&#123;</div><div class="line">			lock_guard&lt;mutex&gt; lock(m_mutex);</div><div class="line">			<span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">				tmp = <span class="keyword">new</span> T;</div><div class="line">				<span class="comment">//atomic_thread_fence  (std::memory_order_release);</span></div><div class="line">				m_instance.store (tmp, <span class="built_in">std</span>::memory_order_release);</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">return</span> tmp;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> &#123;</span>&#125;;</div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">	Foo* inst = Singleton&lt;Foo&gt;::getInstance ();</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="5-用Template泛化"><a href="#5-用Template泛化" class="headerlink" title="5. 用Template泛化"></a>5. 用Template泛化</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;mutex&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;atomic&gt;</span></span></div><div class="line"></div><div class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span></div><div class="line"><span class="keyword">private</span>:</div><div class="line">	<span class="keyword">static</span> atomic&lt;T*&gt; m_instance;</div><div class="line">	<span class="keyword">static</span> mutex	m_mutex;</div><div class="line"><span class="keyword">public</span>:</div><div class="line">	<span class="function"><span class="keyword">static</span> T* <span class="title">getInstance</span> <span class="params">()</span> </span>;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; atomic&lt;T*&gt; Singleton&lt;T&gt;::m_instance;</div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; mutex	Singleton&lt;T&gt;::m_mutex;</div><div class="line"></div><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt; T* Singleton&lt;T&gt;::getInstance () &#123;</div><div class="line">		T* tmp = m_instance.load(<span class="built_in">std</span>::memory_order_acquire);</div><div class="line">		<span class="comment">//atomic_thread_fence (std::memory_order_acquire);</span></div><div class="line">		<span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>)	&#123;</div><div class="line">			lock_guard&lt;mutex&gt; lock(m_mutex);</div><div class="line">			<span class="keyword">if</span> (tmp == <span class="literal">nullptr</span>) &#123;</div><div class="line">				tmp = <span class="keyword">new</span> T;</div><div class="line">				<span class="comment">//atomic_thread_fence  (std::memory_order_release);</span></div><div class="line">				m_instance.store (tmp, <span class="built_in">std</span>::memory_order_release);</div><div class="line">			&#125;</div><div class="line">		&#125;</div><div class="line">		<span class="keyword">return</span> tmp;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> &#123;</span>&#125;;</div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">	Foo* inst = Singleton&lt;Foo&gt;::getInstance ();</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>收工.</p>
 
       
@@ -505,7 +506,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -527,7 +528,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -707,7 +708,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

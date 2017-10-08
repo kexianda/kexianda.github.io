@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -100,6 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2017/06/03/Hacking-on-HotSpot-1-环境设置和调试/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="调试HotSpot的环境配置的资料确实比较少. 想提交patch或者有时候好奇需要深入一下JVM看看具体的实现, 需要配置下开发环境. 这里记录整理一下.有人写过Mac上配置, Windows的环境没查到,我也没弄过, 估计宇宙第一IDE的Visual Studio应该很好使:-)">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-02T04:39:53.011Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hacking on HotSpot (1) 环境设置和调试">
@@ -137,7 +138,7 @@
 
 
 
-  <title>Hacking on HotSpot (1) 环境设置和调试 | 柯贤达</title>
+  <title>Hacking on HotSpot (1) 环境设置和调试 | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -162,7 +163,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -485,7 +486,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -507,7 +508,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -687,7 +688,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

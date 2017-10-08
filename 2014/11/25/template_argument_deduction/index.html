@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -100,6 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2014/11/25/template_argument_deduction/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="C++11加入了rvalue reference的概念后，类型推导规则更加复杂了。微软的Stephan Lavavej在Channel9的Core C++系列中对deduction简单地做了些介绍 ，但并没有深入地讲。我拿C++标准研究了一把，发现deduction的规则细节还是比较繁琐的。标准文档的可读性不太好，颇费脑细胞. 相对而言cppreference可读性要好一些。这篇主要总结函数调用时">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-02T04:39:53.015Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="template argument deduction">
@@ -137,7 +138,7 @@
 
 
 
-  <title>template argument deduction | 柯贤达</title>
+  <title>template argument deduction | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -162,7 +163,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -376,8 +377,8 @@
 <p><br></p>
 <h2 id="Non-deduced-contexts"><a href="#Non-deduced-contexts" class="headerlink" title="Non-deduced contexts"></a>Non-deduced contexts</h2><p>如下情况，P不参与template argument deduction。</p>
 <p>1) The nested-name-specifier (everything to the left of the scope resolution operator ::) of a type that was specified using a qualified-id.<br>在 操作符::左边的T不参与deduction，这个规则是理解std::forward实现的关键点之一。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// the identity template, often used to exclude specific arguments from deduction</span></div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="class"><span class="keyword">struct</span> <span class="title">identity</span> &#123;</span> <span class="keyword">typedef</span> T type; &#125;;</div><div class="line"></div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">bad</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;T&gt; x, T value = <span class="number">1</span>)</span></span>;</div><div class="line"></div><div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">good</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;T&gt; x, <span class="keyword">typename</span> identity&lt;T&gt;::type value = <span class="number">1</span>)</span></span>;</div><div class="line"></div><div class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="keyword">complex</span>&lt;<span class="keyword">double</span>&gt;&gt; x;</div><div class="line">bad(x, <span class="number">1.2</span>); <span class="comment">// P1 = std::vector&lt;T&gt;, A1 = std::vector&lt;std::complex&lt;double&gt;&gt;</span></div><div class="line">             <span class="comment">// P1/A1 deduction determines T = std::complex&lt;double&gt;</span></div><div class="line">             <span class="comment">// P2 = T, A2 = double</span></div><div class="line">             <span class="comment">// P2/A2 deduction determines T = double -- Error</span></div><div class="line">good(x, <span class="number">1.2</span>); <span class="comment">// P1/A1 deduces T = std::complex&lt;double&gt;</span></div><div class="line">              <span class="comment">// P2 = identity&lt;T&gt;::type, T is to the left of ::, non-deduced</span></div></pre></td></tr></table></figure></p>
-<p>2) The expression of a decltype-specifier.<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">template&lt;typename T&gt; void f(decltype(*std::declval&lt;T&gt;()) arg);</div><div class="line">int n; f&lt;int*&gt;(n); // P = decltype(*declval&lt;T&gt;()), A=int. T is not deducible (since C++14)</div></pre></td></tr></table></figure></p>
-<p>3) A template parameter used in the parameter type of a function parameter that has a default argument that is being used in the call for which argument deduction is being done<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">template&lt;typename T, typename F&gt;</div><div class="line">void f(const std::vector&lt;T&gt; &amp;arr, const F&amp; comp = std::less&lt;T&gt;());</div><div class="line">std::vector&lt;std::string&gt; arr(3);</div><div class="line">f(arr); // P1 = const std::vector&lt;T&gt; &amp;, A1=std::vector&lt;std::string&gt; lvalue,</div><div class="line">        // P1/A1 deduces T = std::string</div><div class="line">        // P2 = non-deduced context for F (template parameter) used in the</div><div class="line">        // parameter type const F&amp; of the function parameter comp,</div><div class="line">        // that has a default argument that is being used in the call f(arr)</div></pre></td></tr></table></figure></p>
+<p>2) The expression of a decltype-specifier.<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">template&lt;typename T&gt; void f(decltype(*std::declval&lt;T&gt;()) arg);</div><div class="line"><span class="keyword">int</span> n; f&lt;<span class="keyword">int</span>*&gt;(n); <span class="comment">// P = decltype(*declval&lt;T&gt;()), A=int. T is not deducible (since C++14)</span></div></pre></td></tr></table></figure></p>
+<p>3) A template parameter used in the parameter type of a function parameter that has a default argument that is being used in the call for which argument deduction is being done<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> F&gt;</div><div class="line">void f(const std::vector&lt;T&gt; &amp;arr, const F&amp; comp = std::less&lt;T&gt;());</div><div class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; arr(<span class="number">3</span>);</div><div class="line">f(arr); <span class="comment">// P1 = const std::vector&lt;T&gt; &amp;, A1=std::vector&lt;std::string&gt; lvalue,</span></div><div class="line">        <span class="comment">// P1/A1 deduces T = std::string</span></div><div class="line">        <span class="comment">// P2 = non-deduced context for F (template parameter) used in the</span></div><div class="line">        <span class="comment">// parameter type const F&amp; of the function parameter comp,</span></div><div class="line">        <span class="comment">// that has a default argument that is being used in the call f(arr)</span></div></pre></td></tr></table></figure></p>
 <p>还有其他case，不太常用，这里不提。可参考<a href="http://en.cppreference.com/w/cpp/language/template_argument_deduction" target="_blank" rel="external">文档</a></p>
 <p>注：</p>
 <ol>
@@ -509,7 +510,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -531,7 +532,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -711,7 +712,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

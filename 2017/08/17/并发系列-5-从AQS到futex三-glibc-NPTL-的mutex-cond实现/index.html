@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -100,6 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="上篇笔记大致看了Java同步互斥机制在JVM层的实现. HotSpot在Linux平台是用pthread实现. 这篇继续对glibc(NPTL)在Linux平台上如何实现mutex和condition做个笔记.glibc的源码极其难读, 因为要处理平台区别,性能优化,特殊情况处理等等, 源码的可读性不在大神们的考虑之列. 这里不是逐行源码解读, 列出来的代码都不是glibc的原版代码, 改动和简化">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://ot49rzljt.bkt.clouddn.com/image/tech/pthread_cond_wait.png">
 <meta property="og:updated_time" content="2017-09-03T01:37:54.349Z">
 <meta name="twitter:card" content="summary">
@@ -139,7 +140,7 @@
 
 
 
-  <title>[并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现 | 柯贤达</title>
+  <title>[并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现 | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -164,7 +165,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -358,7 +359,7 @@
 <li>PTHREAD_MUTEX_RECURSIVE_NP，可重入</li>
 <li>其他的先略了…</li>
 </ul>
-<h3 id="pthread-mutex-lock"><a href="#pthread-mutex-lock" class="headerlink" title="pthread_mutex_lock"></a>pthread_mutex_lock</h3><p>pthread_mutex_lock调用LLL_UNLOCK(基于Linux的futex), 去拿到锁或阻塞自己. 另外,对可重入的锁进行计数.<br>(不过, JDK/JVM层有自己的可重入锁设计, 并没有用到 PTHREAD_MUTEX_RECURSIVE_NP 的mutex.)<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">pthread_mutex_lock (<span class="keyword">pthread_mutex_t</span> *mutex) &#123;</div><div class="line">  <span class="keyword">if</span> (type == PTHREAD_MUTEX_TIMED_NP)) &#123;</div><div class="line">      <span class="comment">/* Normal mutex.  */</span></div><div class="line">      <span class="comment">/*LLL_UNLOCK宏是lll_unlock (mutex-&gt;__data.__lock, PTHREAD_MUTEX_PSHARED (mutex));</span></div><div class="line">       PTHREAD_MUTEX_PSHARED 是不同进程间的, 线程见的话,为false</div><div class="line">      */</div><div class="line">      LLL_UNLOCK(mutex);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">else</span> <span class="keyword">if</span> (type == PTHREAD_MUTEX_RECURSIVE_NP) &#123;</div><div class="line">      <span class="comment">/* Recursive mutex.  */</span></div><div class="line">      <span class="keyword">pid_t</span> id = THREAD_GETMEM (THREAD_SELF, tid);</div><div class="line"></div><div class="line">    <span class="comment">/* 若已经持有了此锁, 增加计数, 无需block此线程 */</span></div><div class="line">    <span class="keyword">if</span> (mutex-&gt;__data.__owner == id)&#123;</div><div class="line">			  ++mutex-&gt;__data.__count;</div><div class="line">			  <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">		&#125;</div><div class="line">		<span class="comment">// 去判断锁变量, 如果不行, 被OS休眠掉</span></div><div class="line">		LLL_MUTEX_LOCK (mutex);    </div><div class="line">		<span class="comment">// 拿到了锁, 锁变量是ok的,则设置count</span></div><div class="line">		mutex-&gt;__data.__count = <span class="number">1</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// ...特殊处理和其他类型锁的逻辑忽略...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h3 id="pthread-mutex-lock"><a href="#pthread-mutex-lock" class="headerlink" title="pthread_mutex_lock"></a>pthread_mutex_lock</h3><p>pthread_mutex_lock调用LLL_UNLOCK(基于Linux的futex), 去拿到锁或阻塞自己. 另外,对可重入的锁进行计数.<br>(不过, JDK/JVM层有自己的可重入锁设计, 并没有用到 PTHREAD_MUTEX_RECURSIVE_NP 的mutex.)<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">pthread_mutex_lock (<span class="keyword">pthread_mutex_t</span> *mutex) &#123;</div><div class="line">  <span class="keyword">if</span> (type == PTHREAD_MUTEX_TIMED_NP)) &#123;</div><div class="line">      <span class="comment">/* Normal mutex.  */</span></div><div class="line">      <span class="comment">/*LLL_UNLOCK宏是lll_unlock (mutex-&gt;__data.__lock, PTHREAD_MUTEX_PSHARED (mutex));</span></div><div class="line"><span class="comment">       PTHREAD_MUTEX_PSHARED 是不同进程间的, 线程见的话,为false</span></div><div class="line"><span class="comment">      */</span></div><div class="line">      LLL_UNLOCK(mutex);</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">else</span> <span class="keyword">if</span> (type == PTHREAD_MUTEX_RECURSIVE_NP) &#123;</div><div class="line">      <span class="comment">/* Recursive mutex.  */</span></div><div class="line">      <span class="keyword">pid_t</span> id = THREAD_GETMEM (THREAD_SELF, tid);</div><div class="line"></div><div class="line">    <span class="comment">/* 若已经持有了此锁, 增加计数, 无需block此线程 */</span></div><div class="line">    <span class="keyword">if</span> (mutex-&gt;__data.__owner == id)&#123;</div><div class="line">			  ++mutex-&gt;__data.__count;</div><div class="line">			  <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">		&#125;</div><div class="line">		<span class="comment">// 去判断锁变量, 如果不行, 被OS休眠掉</span></div><div class="line">		LLL_MUTEX_LOCK (mutex);    </div><div class="line">		<span class="comment">// 拿到了锁, 锁变量是ok的,则设置count</span></div><div class="line">		mutex-&gt;__data.__count = <span class="number">1</span>;</div><div class="line">	&#125;</div><div class="line">	<span class="comment">// ...特殊处理和其他类型锁的逻辑忽略...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h3 id="pthread-mutex-unlock"><a href="#pthread-mutex-unlock" class="headerlink" title="pthread_mutex_unlock"></a>pthread_mutex_unlock</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">pthread_mutex_unlock (<span class="keyword">pthread_mutex_t</span> *mutex) &#123;</div><div class="line">	<span class="keyword">if</span> (type == PTHREAD_MUTEX_TIMED_NP) &#123;</div><div class="line">		mutex-&gt;__data.__owner = <span class="number">0</span>;</div><div class="line">		lll_unlock (mutex-&gt;__data.__lock, PTHREAD_MUTEX_PSHARED (mutex));</div><div class="line">		<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">  &#125;</div><div class="line">	<span class="keyword">else</span> &#123;</div><div class="line">		<span class="comment">// if (type == PTHREAD_MUTEX_RECURSIVE_NP) ...</span></div><div class="line">		<span class="comment">// 省略不看了 ...</span></div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>粗略来看, mutex主要是调用底层的lll_lock/lll_unlock, 其实就是调用futex的FUTEX_WAIT/FUTEX_WAKE操作, 来实现线程的休眠和唤醒工作.</p>
 <h2 id="low-level-lock"><a href="#low-level-lock" class="headerlink" title="low level lock"></a>low level lock</h2><p>lll_lock/lll_unlock的lll应该是low level lock的缩写了. 这部分最为tricky, 不是因为汇编, 是并发的处理.<br>lll_lock, 先原子性的检查uaddr中计数器的值是否为val,如果是则让进程休眠，直到FUTEX_WAKE或者超时(time-out)。也就是把进程挂到uaddr相对应的等待队列上去。看代码:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">__lll_lock_wait_private (<span class="keyword">int</span> *futex)</div><div class="line">&#123;</div><div class="line">  <span class="keyword">do</span> &#123;</div><div class="line">    <span class="keyword">int</span> oldval = atomic_compare_and_exchange_val_24_acq (futex, <span class="number">2</span>, <span class="number">1</span>);</div><div class="line">    <span class="keyword">if</span> (oldval != <span class="number">0</span>)  <span class="comment">// 步骤1 用户空间的代码</span></div><div class="line">    lll_futex_wait (futex, <span class="number">2</span>, LLL_PRIVATE);<span class="comment">//步骤2, 马上陷入内核了</span></div><div class="line">  &#125;</div><div class="line">  <span class="keyword">while</span> (atomic_compare_and_exchange_val_24_acq (futex, <span class="number">2</span>, <span class="number">0</span>) != <span class="number">0</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
@@ -497,7 +498,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -519,7 +520,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -699,7 +700,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

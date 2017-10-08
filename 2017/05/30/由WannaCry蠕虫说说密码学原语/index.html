@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="汇编优化,HotSpot,密码学原语," />
+  <meta name="keywords" content="HotSpot,汇编优化,密码学原语," />
 
 
 
@@ -94,12 +94,13 @@
 
 
 <meta name="description" content="WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?再探究一下AES算">
-<meta name="keywords" content="汇编优化,HotSpot,密码学原语">
+<meta name="keywords" content="HotSpot,汇编优化,密码学原语">
 <meta property="og:type" content="article">
 <meta property="og:title" content="由WannaCry蠕虫说说密码学原语">
 <meta property="og:url" content="http://kexianda.github.io/2017/05/30/由WannaCry蠕虫说说密码学原语/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="WannaCry这阵子让很多人欲哭无泪， 感染蠕虫后， 网上各种分析和破解办法，然而没有能彻底解决问题的方法. 因为WannaCry的RSA+AES加密套餐，文件被AES算法加密, 而AES的key用RSA算法加密了. 理论上, 目前很难破解.由此，扯扯密码学原语(cryptographic primitives). 简单评估下JDK里加密算法的性能，还有怎么选择合适的加密算法?再探究一下AES算">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-02T04:39:53.023Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="由WannaCry蠕虫说说密码学原语">
@@ -137,7 +138,7 @@
 
 
 
-  <title>由WannaCry蠕虫说说密码学原语 | 柯贤达</title>
+  <title>由WannaCry蠕虫说说密码学原语 | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -162,7 +163,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -491,9 +492,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/汇编优化/" rel="tag"># 汇编优化</a>
-          
             <a href="/tags/HotSpot/" rel="tag"># HotSpot</a>
+          
+            <a href="/tags/汇编优化/" rel="tag"># 汇编优化</a>
           
             <a href="/tags/密码学原语/" rel="tag"># 密码学原语</a>
           
@@ -592,7 +593,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -614,7 +615,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -794,7 +795,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

@@ -7,7 +7,7 @@
 
 <html class="theme-next pisces use-motion" lang="zh-Hans">
 <head>
-  <meta charset="UTF-8"/>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -100,6 +100,7 @@
 <meta property="og:url" content="http://kexianda.github.io/2017/08/16/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/index.html">
 <meta property="og:site_name" content="柯贤达">
 <meta property="og:description" content="J.U.C.中AQS管理线程队列, LockSupport用来block/unblock线程. 通过HotSpot(Java 9)的源码来粗略的看看JVM这层的实现:  HotSpot的Thread/JavaThread类的简介 HotSpot的Parker的实现细节">
+<meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2017-09-02T04:39:53.019Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
@@ -137,7 +138,7 @@
 
 
 
-  <title>[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker | 柯贤达</title>
+  <title>[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -162,7 +163,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -362,7 +363,7 @@
 </ol>
 <p>1, JDK中的LockSupport只是用来block(park,阻塞)/unblock(unpark,唤醒)线程, 线程队列的管理是JDK的AQS处理的. 从Java层来看, 只需要mutex/cond提供个操作系统的block/unblock API即可.</p>
 <p>2, 但是, 实现时, 竞争还是有的, 比如当前线程某thread_a.park()时, 而另外一个线程thread_b.unpark(thread_a), 这时候, 对于thread_a的mutex来说有竞争的.<br>只不过, 对于JDK而言, 可以透明,只是需要关注block/unblock是阻塞/唤醒了线程操作.</p>
-<p>不同系统实现不一样, 从Parker::park的代码可以看到, 这里的data racing主要是处理: 如果别的线程在unpark它的情况.<br>只看Linux的(已经删掉一些不是核心逻辑的代码, 我加了自己的理解,写在注释里):<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line">void Parker::park(bool isAbsolute, jlong time) &#123;</div><div class="line"></div><div class="line">  //  如果别的线程已经unblock了我.  </div><div class="line">  //  这里并没有拿到mutex的锁, 需要Atomic::xchg和barrier保证lock-free代码的正确.</div><div class="line">  // We depend on Atomic::xchg() having full barrier semantics</div><div class="line">  // since we are doing a lock-free update to _counter.</div><div class="line">  if (Atomic::xchg(0, &amp;_counter) &gt; 0) return;</div><div class="line"></div><div class="line">  // safepoint region相关, 我对细节不详.</div><div class="line">  // safepoint region大致的了解, 见RednaxelaFX的回答https://www.zhihu.com/question/29268019</div><div class="line">  ThreadBlockInVM tbivm(jt);</div><div class="line"></div><div class="line">  // 如果别的线程正在unblock我, 而持有了mutex, 我先返回了,没有必要在_mutex上等</div><div class="line">  if (Thread::is_interrupted(thread, false) || pthread_mutex_trylock(_mutex) != 0) &#123;</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // 如果别的线程已经unblock了我, no wait needed</div><div class="line">  // 已经拿到了mutex, 所以不需要和前面一样Atomic::xchg了.</div><div class="line">  int status;</div><div class="line">  if (_counter &gt; 0)  &#123;</div><div class="line">    _counter = 0;</div><div class="line">    status = pthread_mutex_unlock(_mutex);</div><div class="line">    OrderAccess::fence();</div><div class="line">    return;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  // 记录线程的状态</div><div class="line">  OSThreadWaitState osts(thread-&gt;osthread(), false /* not Object.wait() */);</div><div class="line">  jt-&gt;set_suspend_equivalent();</div><div class="line">  // cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()</div><div class="line"></div><div class="line">  // 这一坨, 就是block自己这个线程了.(Java层当前执行的线程)</div><div class="line">  if (time == 0) &#123;</div><div class="line">    _cur_index = REL_INDEX; // arbitrary choice when not timed</div><div class="line">    status = pthread_cond_wait(&amp;_cond[_cur_index], _mutex);</div><div class="line">  &#125; else &#123;</div><div class="line">    _cur_index = isAbsolute ? ABS_INDEX : REL_INDEX;</div><div class="line">    status = pthread_cond_timedwait(&amp;_cond[_cur_index], _mutex, &amp;absTime);</div><div class="line">  &#125;</div><div class="line">  _cur_index = -1;</div><div class="line"></div><div class="line">  // 已经从block住状态中恢复返回了, 把_counter设0.</div><div class="line">  _counter = 0;</div><div class="line">  status = pthread_mutex_unlock(_mutex);</div><div class="line"></div><div class="line">  // 要保证多线程的正确性要十二分小心</div><div class="line">  // 这里的memory fence 是一个lock addl 指令, 加上compiler_barrier</div><div class="line">  // 保证_counter = 0 是对调用unlock线程是可见的.</div><div class="line">  // Paranoia to ensure our locked and lock-free paths interact</div><div class="line">  // correctly with each other and Java-level accesses.</div><div class="line">  OrderAccess::fence();</div><div class="line"></div><div class="line">  // 已经醒过来, 但如果有别人在suspend我,那么继续suspend自己.</div><div class="line">  // If externally suspended while waiting, re-suspend</div><div class="line">  if (jt-&gt;handle_special_suspend_equivalent_condition()) &#123;</div><div class="line">    jt-&gt;java_suspend_self();</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>不同系统实现不一样, 从Parker::park的代码可以看到, 这里的data racing主要是处理: 如果别的线程在unpark它的情况.<br>只看Linux的(已经删掉一些不是核心逻辑的代码, 我加了自己的理解,写在注释里):<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> Parker::park(<span class="keyword">bool</span> isAbsolute, jlong time) &#123;</div><div class="line"></div><div class="line">  <span class="comment">//  如果别的线程已经unblock了我.  </span></div><div class="line">  <span class="comment">//  这里并没有拿到mutex的锁, 需要Atomic::xchg和barrier保证lock-free代码的正确.</span></div><div class="line">  <span class="comment">// We depend on Atomic::xchg() having full barrier semantics</span></div><div class="line">  <span class="comment">// since we are doing a lock-free update to _counter.</span></div><div class="line">  <span class="keyword">if</span> (Atomic::xchg(<span class="number">0</span>, &amp;_counter) &gt; <span class="number">0</span>) <span class="keyword">return</span>;</div><div class="line"></div><div class="line">  <span class="comment">// safepoint region相关, 我对细节不详.</span></div><div class="line">  <span class="comment">// safepoint region大致的了解, 见RednaxelaFX的回答https://www.zhihu.com/question/29268019</span></div><div class="line">  <span class="function">ThreadBlockInVM <span class="title">tbivm</span><span class="params">(jt)</span></span>;</div><div class="line"></div><div class="line">  <span class="comment">// 如果别的线程正在unblock我, 而持有了mutex, 我先返回了,没有必要在_mutex上等</span></div><div class="line">  <span class="keyword">if</span> (Thread::is_interrupted(thread, <span class="literal">false</span>) || pthread_mutex_trylock(_mutex) != <span class="number">0</span>) &#123;</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 如果别的线程已经unblock了我, no wait needed</span></div><div class="line">  <span class="comment">// 已经拿到了mutex, 所以不需要和前面一样Atomic::xchg了.</span></div><div class="line">  <span class="keyword">int</span> status;</div><div class="line">  <span class="keyword">if</span> (_counter &gt; <span class="number">0</span>)  &#123;</div><div class="line">    _counter = <span class="number">0</span>;</div><div class="line">    status = pthread_mutex_unlock(_mutex);</div><div class="line">    OrderAccess::fence();</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="comment">// 记录线程的状态</span></div><div class="line">  OSThreadWaitState osts(thread-&gt;osthread(), false /* not Object.wait() */);</div><div class="line">  jt-&gt;set_suspend_equivalent();</div><div class="line">  <span class="comment">// cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()</span></div><div class="line"></div><div class="line">  <span class="comment">// 这一坨, 就是block自己这个线程了.(Java层当前执行的线程)</span></div><div class="line">  <span class="keyword">if</span> (time == <span class="number">0</span>) &#123;</div><div class="line">    _cur_index = REL_INDEX; <span class="comment">// arbitrary choice when not timed</span></div><div class="line">    status = pthread_cond_wait(&amp;_cond[_cur_index], _mutex);</div><div class="line">  &#125; <span class="keyword">else</span> &#123;</div><div class="line">    _cur_index = isAbsolute ? ABS_INDEX : REL_INDEX;</div><div class="line">    status = pthread_cond_timedwait(&amp;_cond[_cur_index], _mutex, &amp;absTime);</div><div class="line">  &#125;</div><div class="line">  _cur_index = <span class="number">-1</span>;</div><div class="line"></div><div class="line">  <span class="comment">// 已经从block住状态中恢复返回了, 把_counter设0.</span></div><div class="line">  _counter = <span class="number">0</span>;</div><div class="line">  status = pthread_mutex_unlock(_mutex);</div><div class="line"></div><div class="line">  <span class="comment">// 要保证多线程的正确性要十二分小心</span></div><div class="line">  <span class="comment">// 这里的memory fence 是一个lock addl 指令, 加上compiler_barrier</span></div><div class="line">  <span class="comment">// 保证_counter = 0 是对调用unlock线程是可见的.</span></div><div class="line">  <span class="comment">// Paranoia to ensure our locked and lock-free paths interact</span></div><div class="line">  <span class="comment">// correctly with each other and Java-level accesses.</span></div><div class="line">  OrderAccess::fence();</div><div class="line"></div><div class="line">  <span class="comment">// 已经醒过来, 但如果有别人在suspend我,那么继续suspend自己.</span></div><div class="line">  <span class="comment">// If externally suspended while waiting, re-suspend</span></div><div class="line">  <span class="keyword">if</span> (jt-&gt;handle_special_suspend_equivalent_condition()) &#123;</div><div class="line">    jt-&gt;java_suspend_self();</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>再看unpark, B线程唤醒A线程, 是B调用了A的parker::unpark()(搜Unsafe_Unpark的代码).<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> Parker::unpark() &#123;</div><div class="line">  <span class="keyword">int</span> status = pthread_mutex_lock(_mutex);</div><div class="line">  <span class="keyword">const</span> <span class="keyword">int</span> s = _counter;</div><div class="line">  _counter = <span class="number">1</span>;</div><div class="line">  <span class="comment">// must capture correct index before unlocking</span></div><div class="line">  <span class="keyword">int</span> index = _cur_index;</div><div class="line">  status = pthread_mutex_unlock(_mutex);</div><div class="line">  <span class="keyword">if</span> (s &lt; <span class="number">1</span> &amp;&amp; index != <span class="number">-1</span>) &#123;</div><div class="line">    <span class="comment">// thread is definitely parked</span></div><div class="line">    status = pthread_cond_signal(&amp;_cond[index]);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>Parker::unpark()比较简单, 设置_counter=1, 并unlock mutex和cond_signal.<br>_counter不会增加, 设死为1. 这就是Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>里说’Calls to unpark are not “counted”.</p>
 
@@ -493,7 +494,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -515,7 +516,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -695,7 +696,24 @@
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 

@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="并发," />
+  <meta name="keywords" content="分布式,Paxos," />
 
 
 
@@ -93,18 +93,18 @@
 
 
 
-<meta name="description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,纵向的深入一下:  (JDK) J.U.C (AQS/LockSupp">
-<meta name="keywords" content="并发">
+<meta name="description" content="前两年看过Paxos协议, 网上各种通俗化解释, 更晕. 不如自己看论文. 自己没有实践中实现Paxos, 看chubby论文就知道坑非常多. 但理论上的理解,论文《The Part-Time Parliament》其实讲的很清晰.这不是Paxos介绍讲解什么的, 只是读论文做的笔记, 把数学证明过程再证一次.">
+<meta name="keywords" content="分布式,Paxos">
 <meta property="og:type" content="article">
-<meta property="og:title" content="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
-<meta property="og:url" content="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/index.html">
+<meta property="og:title" content="读The Part-Time Parliament笔记(一)">
+<meta property="og:url" content="http://kexianda.github.io/2017/09/02/读The-Part-Time-Parliament笔记-一/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,纵向的深入一下:  (JDK) J.U.C (AQS/LockSupp">
+<meta property="og:description" content="前两年看过Paxos协议, 网上各种通俗化解释, 更晕. 不如自己看论文. 自己没有实践中实现Paxos, 看chubby论文就知道坑非常多. 但理论上的理解,论文《The Part-Time Parliament》其实讲的很清晰.这不是Paxos介绍讲解什么的, 只是读论文做的笔记, 把数学证明过程再证一次.">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-09-03T01:52:11.025Z">
+<meta property="og:updated_time" content="2017-10-08T15:53:03.253Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="[并发系列-3] 从AQS到futex(一): AQS和LockSupport">
-<meta name="twitter:description" content="AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(链接). 也可以通过Doug Lea的AQS论文(中文版)看看AQS的设计思想. 从另外一个角度,纵向的深入一下:  (JDK) J.U.C (AQS/LockSupp">
+<meta name="twitter:title" content="读The Part-Time Parliament笔记(一)">
+<meta name="twitter:description" content="前两年看过Paxos协议, 网上各种通俗化解释, 更晕. 不如自己看论文. 自己没有实践中实现Paxos, 看chubby论文就知道坑非常多. 但理论上的理解,论文《The Part-Time Parliament》其实讲的很清晰.这不是Paxos介绍讲解什么的, 只是读论文做的笔记, 把数学证明过程再证一次.">
 
 
 
@@ -132,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/"/>
+  <link rel="canonical" href="http://kexianda.github.io/2017/09/02/读The-Part-Time-Parliament笔记-一/"/>
 
 
 
 
 
-  <title>[并发系列-3] 从AQS到futex(一): AQS和LockSupport | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  <title>读The Part-Time Parliament笔记(一) | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -257,7 +257,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/13/并发系列-3-从AQS到futex之一-AQS和LockSupport/">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/09/02/读The-Part-Time-Parliament笔记-一/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="柯贤达">
@@ -274,7 +274,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">[并发系列-3] 从AQS到futex(一): AQS和LockSupport</h1>
+          <h1 class="post-title" itemprop="name headline">读The Part-Time Parliament笔记(一)</h1>
         
 
         <div class="post-meta">
@@ -286,8 +286,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-13T00:00:00+08:00">
-                2017-08-13
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-02T00:00:00+08:00">
+                2017-09-02
               </time>
             
 
@@ -343,55 +343,31 @@
       
 
       
-        <p>AQS(AbstractQueuedSynchronizer,同步器)是java.util.concurrenct包一个核心基础类, 来用构建锁或其他同步组件. 网上对这个的分析文章非常多,有源代码解读还有画出图示意线程队列的管理(<a href="http://blog.csdn.net/javazejian/article/details/75043422" target="_blank" rel="external">链接</a>). 也可以通过Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>(<a href="http://ifeve.com/aqs-2/" target="_blank" rel="external">中文版</a>)看看AQS的设计思想.</p>
-<p>从另外一个角度,纵向的深入一下:</p>
-<ul>
-<li>(JDK) J.U.C (AQS/LockSupport) =&gt;</li>
-<li>(JVM) HotSpot (Thread/Parker) 线程和block/unblock实现 =&gt;</li>
-<li>(C runtime) 到glibc中的pthread(NPTL)的实现 =&gt;</li>
-<li>(Kernel) Linux内核的线程和futex的介绍</li>
+        <p>前两年看过Paxos协议, 网上各种通俗化解释, 更晕. 不如自己看论文. 自己没有实践中实现Paxos, 看chubby论文就知道坑非常多. 但理论上的理解,论文《The Part-Time Parliament》其实讲的很清晰.<br>这不是Paxos介绍讲解什么的, 只是读论文做的笔记, 把数学证明过程再证一次.<br><a id="more"></a></p>
+<h2 id="一致性约束文字描述"><a href="#一致性约束文字描述" class="headerlink" title="一致性约束文字描述"></a>一致性约束文字描述</h2><p>$\beta$是表决的集合, 满足一致性的约束条件如下:<br>B1($\beta$): $\beta$中的每一轮表决,都有一个唯一的编号<br>B2($\beta$): $\beta$中任意两轮表决的法定人数集中,至少有一个公共的牧师成员<br>B3($\beta$): 对于$\beta$中每一轮表决$B$,如果$B$的法定人数集中的任何一个牧师在$\beta$中一个更小<br>轮的表决中投过(赞成)票,那么$B$的法令与所有这些更小轮表决中的最大的那次表决的法令相同</p>
+<h2 id="符号化的定义"><a href="#符号化的定义" class="headerlink" title="符号化的定义"></a>符号化的定义</h2><h3 id="表决"><a href="#表决" class="headerlink" title="表决"></a>表决</h3><p>$B$ : 一轮表决(a choice that is made by voting)<br>$B_{dec}$ : 一条法令(decree)<br>$B_{qrm}$ : 一个牧师的非空集合(表决的法定人数集quorum)<br>$B_{vot}$ : 一个牧师的集合(所有对法令作出投票(赞成)的牧师).<br>$B_{bal}$ : 这轮表决的编号<br>说一轮表决B是成功的,当且仅当 $ B_{qrm} \subseteq B_{vot} $ , 一轮成功的投票是每一个法定人数<br>集的成员都投了赞成票.</p>
+<h3 id="投票"><a href="#投票" class="headerlink" title="投票"></a>投票</h3><p>$ null \space vote$ 为: $\langle null_p, - \infty , BLANK \rangle$<br>$v_{pst}$ 为投票的牧师, $v_{bal}$ 为本论表决的编号, $v_{dec}$ 为所表决的法令.<br>$v_{dec}$不一定是个有效的表决，是$v_{pst}$对$v_{dec}$的提议”点过赞” :-).<br>$Votes(\beta)$ 为所有在$\beta$中的投票.</p>
+<p>$MaxVote(b, p, \beta): max(\{ v \in Votes(\beta) \vert (v_{pst}=p) \land (v_{bal} \lt b) \} \cup { null_p })$<br>$Votes(\beta)$中由p牧师投出的表决编号小与b的最大投票或空投票$null_p$.</p>
+<p>$MaxVote(b, Q, \beta): max(\{ v \in Votes(\beta) \vert (v_{pst} \in Q) \land (v_{bal} \lt b) \} \cup { null_p })$<br>$Votes(\beta)$中由Q集合的牧师们投出的表决变化小与b的最大投票或空投票$null_p$.  </p>
+<p>先把定义搞清楚了,这样理解三个约束条件的形式化和严格的数学证明比较简单了.</p>
+<h2 id="形式化的一致性约束"><a href="#形式化的一致性约束" class="headerlink" title="形式化的一致性约束"></a>形式化的一致性约束</h2><ul>
+<li>$B1(\beta) \doteq \forall B,B’ \in \beta : (B \neq B’) \implies (B_{bal} \neq B’_{bal})$</li>
+<li>$B2(\beta) \doteq \forall B,B’ \in \beta : B_{qrm} \cap B’_{qrm} \neq \emptyset$</li>
+<li>$B3(\beta) \doteq \forall B \in \beta :(MaxVote(B_{bal}, B_{qrm}, \beta)_{bal} \neq - \infty) \implies (B_{dec} = MaxVote(B_{bal}, B_{qrm}, \beta)_{dec})$</li>
 </ul>
-<p>从AQS到HotSpot, 再到glibc, 最后到内核的futex. 纵向一条线深入下来, 粗略地了解下各个层次的实现, 做个笔记.<br>问: 整这个有用么?<br>答: 可能没啥具体作用. 还是类似孔乙己写回字.</p>
-<a id="more"></a>
-<h2 id="AQS简述"><a href="#AQS简述" class="headerlink" title="AQS简述"></a>AQS简述</h2><p>同步器的语义其实很直观, 就是内部有个原子性的状态变量(锁变量), 同步器实现线程队列的管理和线程的block/unblock.</p>
-<ul>
-<li>同步状态(原子性)；</li>
-<li>线程的阻塞与解除阻塞(block/unblock)；</li>
-<li>队列的管理；</li>
-</ul>
-<p>同步器的语义或API, 最核心的语义(API)就两个acquire()/release().<br>acquire():</p>
-<ul>
-<li>检查状态变量, 如果不允许, 把线程进入队列, block当前线程</li>
-<li>如果允许, 设置状态变量表示占有</li>
-</ul>
-<p>release():</p>
-<ul>
-<li>更新状态变量</li>
-<li>unblock一个或多个等待队列的线程. // LockSupport.unpark(thread);</li>
-</ul>
-<p>在J.U.C的实现中, AQS有两个队列, 一个是同步队列,线程被阻塞了,等待获取锁. 另一个是条件队列. 队列节点是内部类Node. 内部类ConditionObject用来构建条件队列，当Condition.wait()后，线程将会加入条件队列中; Condition.signal()后，线程将从条件队列转移动同步队列中进行锁竞争。</p>
-<p>在具体实现中, AQS不仅是简单的acquire和release,有更精细的API, 比如:  </p>
-<ul>
-<li>独占/共享模式的 acquire/acquireShared和release/releaseShared<br>所谓独占共享模式,得看具体的逻辑, 比如,CountDownLatch和ReentrantReadWriteLock的独占分享锁的逻辑不一样, 所以AQS需要子类自己去定义.</li>
-<li>阻塞式非阻塞式, acquire/tryAcquire<br>根据状态判断,如果不允许, acquire是block线程, tryAcquire是返回.</li>
-<li>timed mode.<br>加上时间限制, 最底层是操作系统根据时间限制唤醒线程.</li>
-</ul>
-<h2 id="同步状态的操作"><a href="#同步状态的操作" class="headerlink" title="同步状态的操作"></a>同步状态的操作</h2><p>状态在AQS里是个:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> state;</div></pre></td></tr></table></figure></p>
-<p>volatile保证可见性(内存屏障里的acquire/release语义), 32位方便原子操作.<br>compareAndSet是用unsafe.compareAndSwapInt实现.<br>在x86平台上是用 cmpxchg 指令实现, 在多核CPU还要加个lock锁下总线(老CPU), 现代的CPU上lock前缀是锁cache line.</p>
-<p>state的语义是子类按自己的逻辑定义, 可以当中一个简单布尔类型,或者不同的bit不同语义.比如, 在ReentrantReadWriteLock的精巧设计中,state第16位的bit用是标识EXCLUSIVE状态.</p>
-<h2 id="阻塞-block-unblock-的实现-LockSupport"><a href="#阻塞-block-unblock-的实现-LockSupport" class="headerlink" title="阻塞(block/unblock)的实现(LockSupport)"></a>阻塞(block/unblock)的实现(LockSupport)</h2><p>LockSupport主要干两件事情:</p>
-<ul>
-<li>park/unpack(也就是block/unblock线程), 这个通过native实现, 在JVM里支持</li>
-<li>给JDK的Thread类设置 blocker, 用于监控和统计</li>
-</ul>
-<p>park()是阻塞当前线程.<br>unpark(thread), 指定参数, 明确唤醒哪个线程.<br>这两个操作是native, 在JVM中实现.</p>
-<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>Doug Lea的<a href="http://gee.cs.oswego.edu/dl/papers/aqs.pdf" target="_blank" rel="external">AQS论文</a>里有段话:</p>
-<blockquote>
-<p>Method LockSupport.park blocks the current thread unless or until a LockSupport.unpark has been issued. (Spurious wakeups are also permitted.) Calls to unpark are not “counted”, so multiple unparks before a park only unblock a single park.<br>Additionally, this applies per-thread, not per-synchronizer. A thread invoking park on a new synchronizer might return immediately because of a “leftover” unpark from a previous usage. However, in the absence of an unpark, its next invocation will block.</p>
-</blockquote>
-<p>非常拗口, 看得人头晕, 看了代码, 其实很简单.<br>JVM层实现时, parker有个counter字段, LockSupport.unpack(thread)时把counter=1. 重复调用N次也好,counter还是1. unpack调用多次也就是一次的效果.<br>LockSupport()(当前线程)时, 如果counter&gt;0(逻辑上相当于: 当前线程准备park, 发现别人已经准备唤醒我了,那么我就不阻塞了), 置0,然后返回了.</p>
-<h2 id="同步队列-条件队列的管理"><a href="#同步队列-条件队列的管理" class="headerlink" title="同步队列 / 条件队列的管理"></a>同步队列 / 条件队列的管理</h2><p>需要注意一点: J.U.C的实现是自己管理线程的队列, 而不是依赖底层的锁(比如glibc的mutex/condition)来管理线程队列.<br>具体的实现逻辑比较复杂, 网上源码分析极多, 不赘述.</p>
-<p>JVM,glibc,linux层的笔记待续…</p>
+<h2 id="引理及其证明思路"><a href="#引理及其证明思路" class="headerlink" title="引理及其证明思路"></a>引理及其证明思路</h2><p>$\forall B,B’ \in \beta : ((B_{qrm} \subseteq B_{vot}) \land (B’_{bal} &gt; B_{bal})) \implies (B’_{dec} = B_{dec})$<br>引理其实就是约束条件的另一种表述. $(B_{qrm} \subseteq B_{vot}$表示B轮表决满足法定人数. 引理意思是, 一旦决议成功确定, 不再改动. 不然的话这种<strong>抢占式</strong>循环下去投票没法结束,进展性有问题了.</p>
+<p>反证法不难得出结论, 思路是这样的：<strong> 先假设个决议不同于B的决议的大于B轮最小轮次, 然后推导出决定C轮决议的那个MaxVote的轮次号大于B的轮次号，从而得出与假设矛盾的结论得证</strong> .<br>数学证明如下:<br>(1) 不妨假设C轮表决是满足决议不同于B的大于B轮次的最小轮,<br>(2) C轮表决中的法定人数集合必然有某人q在B轮中投过票v, 根据MaxVote定义有: $MaxVote(C_{bal}, C_{qrm}, \beta)_{bal} &gt;= v_{bal} = B_{bal}$<br>(3)而$C_{dec} = MaxVote(C_{bal}, C_{qrm}, \beta)dec \neq B_{dec}$, 根据约束B1有: $MaxVote(C_{bal}, C_{qrm}, \beta)_{bal} \neq v_{bal} = B_{bal}$. 去掉这个等于后，综合(2)得出：$MaxVote(C_{bal}, C_{qrm}, \beta)_{bal} &gt; B_{bal}$<br>(4) 而由MaxVote定义，$C_{bal} &gt; MaxVote(C_{bal}, C_{qrm}, \beta)_{bal}$<br>(5) 与$C_{bal}$为满足假设的最小轮次矛盾.<br>证毕.</p>
+<h2 id="从一致性约束到协议"><a href="#从一致性约束到协议" class="headerlink" title="从一致性约束到协议"></a>从一致性约束到协议</h2><p>初级协议(The Preliminary Protocol)<br>(B1). 为了使 B1 成立，每一轮表决都必须获得一个唯一的编号<br>(B2). 为了使 B2 成立，多数牧师作为表决的法定人数集.<br>(B3). 一个牧师 p 在发起表决前，需要找出$MaxVote(b, Q, beta)_{dec}$, 必须询问Q集合的每个牧师小于b表决, 于是有下面表决过程步骤(两阶段)：</p>
+<ol>
+<li>p询问某些牧师, 我p准备发起编号b的表决了,p选择一个编号b,给某些牧师(最好&gt;Q集合(quorum)的牧师发一条消息NextBallot(b);</li>
+<li>q回答p，告知满足小于b的最大vote;<br>牧师q响应NextBallot(b), 发送LastVote(b,v)给p, v 是 p 的编号小于 b的表决。q没投过票就是$null_{p}$<br>为了满足约束条件(B3), $MaxVote(b,q,\beta)$在q发送LastVote(b,v)后不能再改变. 而新表决的发起和投票的进行会改变<br>集合$\beta$, 所以q必须承诺在编号集合$[v_{bal}, b]$中的表决过程中不再投票(q必须记录下v和b,来保证承诺);</li>
+<li>p收到过半的回应中选编号最大的表决的投票(满足B3)，然后给Q(大多数牧师)发送BeginBallot(b,d), 开始表决过程;</li>
+<li>在收到 BeginBallot(b,d)消息后， 牧师 q 发现他发送的LastVote编号就是b，那么他回复投上一票。如果q发送的LastVote(b2, v), 编号不同, 为了维持B3约束不改变MaxVote，那么他决定不投赞成票;</li>
+<li>如果p收到Q(法定人数)的投票(Voted(b,q)),那么他记下决议d，发送success(d)给所有人;</li>
+<li>其他人收到success(d), 记下这个决议d.  </li>
+</ol>
+<p>步骤(3)的执行可以认为是将一个表决B加入到集合$\beta$中,其中 $B_{bal}=b,B_{qrm}=Q,B_{vot}= \emptyset, B_{dec}=d$. 但此时还不会影响MaxVote(b,q,beta), 因为还没有人投票呢.<br>在步骤(4)中，如果牧师q决定在表决中投票，那么q加入B的投票者集合$\beta$,改变了表决集合$\beta$，这里$B \in \beta$.</p>
+<p>后面的基本协议(The Basic Protocal)是继续加强约束.  完整的神会协议(The Complelte Synod Protocal)呢,就是改善进展性(progress). Multi-Decree Parliament等等(to be continued…)<br>(Hexo对LaTex不友好,十一折腾一阵搞定LaTex的支持)</p>
 
       
     </div>
@@ -421,7 +397,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/并发/" rel="tag"># 并发</a>
+            <a href="/tags/分布式/" rel="tag"># 分布式</a>
+          
+            <a href="/tags/Paxos/" rel="tag"># Paxos</a>
           
         </div>
       
@@ -434,8 +412,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/07/19/Markus-K在塞维利亚街头的布鲁斯表演/" rel="next" title="Markus K在塞维利亚街头的布鲁斯表演">
-                <i class="fa fa-chevron-left"></i> Markus K在塞维利亚街头的布鲁斯表演
+              <a href="/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/" rel="next" title="[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍">
+                <i class="fa fa-chevron-left"></i> [并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍
               </a>
             
           </div>
@@ -444,8 +422,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/08/16/并发系列-4-从AQS到futex-二-JVM的Thread和Parker/" rel="prev" title="[并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker">
-                [并发系列-4] 从AQS到futex(二): HotSpot的JavaThread和Parker <i class="fa fa-chevron-right"></i>
+              <a href="/2017/09/10/Performance-Critical优化例子1/" rel="prev" title="Performance-Critical的优化例子(1)">
+                Performance-Critical的优化例子(1) <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -586,7 +564,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#AQS简述"><span class="nav-number">1.</span> <span class="nav-text">AQS简述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步状态的操作"><span class="nav-number">2.</span> <span class="nav-text">同步状态的操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阻塞-block-unblock-的实现-LockSupport"><span class="nav-number">3.</span> <span class="nav-text">阻塞(block/unblock)的实现(LockSupport)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">3.1.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同步队列-条件队列的管理"><span class="nav-number">4.</span> <span class="nav-text">同步队列 / 条件队列的管理</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一致性约束文字描述"><span class="nav-number">1.</span> <span class="nav-text">一致性约束文字描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#符号化的定义"><span class="nav-number">2.</span> <span class="nav-text">符号化的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#表决"><span class="nav-number">2.1.</span> <span class="nav-text">表决</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#投票"><span class="nav-number">2.2.</span> <span class="nav-text">投票</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#形式化的一致性约束"><span class="nav-number">3.</span> <span class="nav-text">形式化的一致性约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引理及其证明思路"><span class="nav-number">4.</span> <span class="nav-text">引理及其证明思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从一致性约束到协议"><span class="nav-number">5.</span> <span class="nav-text">从一致性约束到协议</span></a></li></ol></div>
             
 
           </div>
