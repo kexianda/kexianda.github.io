@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="并发,glibc,kernel," />
+  <meta name="keywords" content="并发," />
 
 
 
@@ -93,20 +93,18 @@
 
 
 
-<meta name="description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
-<meta name="keywords" content="并发,glibc,kernel">
+<meta name="description" content="多线程的高并发总是个很tricky的事情. 为了避免操作系统的线程context switch成本(以千个ns为单位了), lock-free编程中用各种原子操作(CAS等和内存屏障). 极端的地方, 甚至CAS操作的成本都要考虑. 比如Java中的synchronized的偏向锁/轻量级锁优化就考虑减少CAS操作. 还有JUC包中的一些实现也是尽量减少CAS.那么CAS大致上什么样的一个成本呢?">
+<meta name="keywords" content="并发">
 <meta property="og:type" content="article">
-<meta property="og:title" content="[并发系列-6] 从AQS到futex(四): Futex&#x2F;Critical Section介绍">
-<meta property="og:url" content="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/index.html">
+<meta property="og:title" content="[并发系列-7] CAS的大致成本">
+<meta property="og:url" content="http://kexianda.github.io/2017/11/12/并发系列-7-CAS的大致成本/index.html">
 <meta property="og:site_name" content="柯贤达">
-<meta property="og:description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
+<meta property="og:description" content="多线程的高并发总是个很tricky的事情. 为了避免操作系统的线程context switch成本(以千个ns为单位了), lock-free编程中用各种原子操作(CAS等和内存屏障). 极端的地方, 甚至CAS操作的成本都要考虑. 比如Java中的synchronized的偏向锁/轻量级锁优化就考虑减少CAS操作. 还有JUC包中的一些实现也是尽量减少CAS.那么CAS大致上什么样的一个成本呢?">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://static.lwn.net/images/ns/kernel/dvh-futexes.png">
-<meta property="og:updated_time" content="2017-09-03T02:02:31.508Z">
+<meta property="og:updated_time" content="2017-11-12T10:22:24.272Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="[并发系列-6] 从AQS到futex(四): Futex&#x2F;Critical Section介绍">
-<meta name="twitter:description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
-<meta name="twitter:image" content="https://static.lwn.net/images/ns/kernel/dvh-futexes.png">
+<meta name="twitter:title" content="[并发系列-7] CAS的大致成本">
+<meta name="twitter:description" content="多线程的高并发总是个很tricky的事情. 为了避免操作系统的线程context switch成本(以千个ns为单位了), lock-free编程中用各种原子操作(CAS等和内存屏障). 极端的地方, 甚至CAS操作的成本都要考虑. 比如Java中的synchronized的偏向锁/轻量级锁优化就考虑减少CAS操作. 还有JUC包中的一些实现也是尽量减少CAS.那么CAS大致上什么样的一个成本呢?">
 
 
 
@@ -134,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/"/>
+  <link rel="canonical" href="http://kexianda.github.io/2017/11/12/并发系列-7-CAS的大致成本/"/>
 
 
 
 
 
-  <title>[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍 | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  <title>[并发系列-7] CAS的大致成本 | 柯贤达</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -259,7 +257,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/08/19/并发系列-6-从AQS到futex-四-Futex-Critical-Section介绍/">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/11/12/并发系列-7-CAS的大致成本/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="柯贤达">
@@ -276,7 +274,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">[并发系列-6] 从AQS到futex(四): Futex/Critical Section介绍</h1>
+          <h1 class="post-title" itemprop="name headline">[并发系列-7] CAS的大致成本</h1>
         
 
         <div class="post-meta">
@@ -288,8 +286,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-19T00:00:00+08:00">
-                2017-08-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-12T00:00:00+08:00">
+                2017-11-12
               </time>
             
 
@@ -345,28 +343,17 @@
       
 
       
-        <p><a href="https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf" target="_blank" rel="external">Futex(Fast Userspace muTexes)</a>,是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.<br><a id="more"></a></p>
-<h2 id="Overview-what-amp-why"><a href="#Overview-what-amp-why" class="headerlink" title="Overview(what &amp; why)"></a>Overview(what &amp; why)</h2><p>顾名思义，Futex锁变量是在userspace中. Linux从2.5.7开始支持Futex.<br>其设计理由基于两点：</p>
+        <p>多线程的高并发总是个很tricky的事情. 为了避免操作系统的线程context switch成本(以千个ns为单位了), lock-free编程中用各种原子操作(CAS等和内存屏障). 极端的地方, 甚至CAS操作的成本都要考虑. 比如Java中的synchronized的偏向锁/轻量级锁优化就考虑减少CAS操作. 还有JUC包中的一些实现也是尽量减少CAS.<br>那么CAS大致上什么样的一个成本呢?<br><a id="more"></a></p>
+<h2 id="Java-ConcurrentLinkedQueue的进队列例子"><a href="#Java-ConcurrentLinkedQueue的进队列例子" class="headerlink" title="Java ConcurrentLinkedQueue的进队列例子"></a>Java ConcurrentLinkedQueue的进队列例子</h2><p>先看ConcurrentLinkedQueue(Java 8)的进队列例子,看看Doug Lea大神对CAS怎样考虑tradeoff, 对CAS的成本有个大致印象.<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment">     * Inserts the specified element at the tail of this queue.</span></div><div class="line"><span class="comment">     * As the queue is unbounded, this method will never return &#123;<span class="doctag">@code</span> false&#125;.</span></div><div class="line"><span class="comment">     *</span></div><div class="line"><span class="comment">     * <span class="doctag">@return</span> &#123;<span class="doctag">@code</span> true&#125; (as specified by &#123;<span class="doctag">@link</span> Queue#offer&#125;)</span></div><div class="line"><span class="comment">     * <span class="doctag">@throws</span> NullPointerException if the specified element is null</span></div><div class="line"><span class="comment">     */</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</div><div class="line">        checkNotNull(e);</div><div class="line">        <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;E&gt;(e);</div><div class="line"></div><div class="line">        <span class="keyword">for</span> (Node&lt;E&gt; t = tail, p = t;;) &#123;</div><div class="line">            Node&lt;E&gt; q = p.next;</div><div class="line">            <span class="keyword">if</span> (q == <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// p is last node</span></div><div class="line">                <span class="keyword">if</span> (p.casNext(<span class="keyword">null</span>, newNode)) &#123;</div><div class="line">                    <span class="comment">// Successful CAS is the linearization point</span></div><div class="line">                    <span class="comment">// for e to become an element of this queue,</span></div><div class="line">                    <span class="comment">// and for newNode to become "live".</span></div><div class="line">                    <span class="keyword">if</span> (p != t) <span class="comment">// hop two nodes at a time</span></div><div class="line">                        casTail(t, newNode);  <span class="comment">// Failure is OK.</span></div><div class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">                &#125;</div><div class="line">                <span class="comment">// Lost CAS race to another thread; re-read next</span></div><div class="line">            &#125;</div><div class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (p == q)</div><div class="line">                <span class="comment">// We have fallen off list.  If tail is unchanged, it</span></div><div class="line">                <span class="comment">// will also be off-list, in which case we need to</span></div><div class="line">                <span class="comment">// jump to head, from which all live nodes are always</span></div><div class="line">                <span class="comment">// reachable.  Else the new tail is a better bet.</span></div><div class="line">                p = (t != (t = tail)) ? t : head;</div><div class="line">            <span class="keyword">else</span></div><div class="line">                <span class="comment">// Check for tail updates after two hops.</span></div><div class="line">                p = (p != t &amp;&amp; t != (t = tail)) ? t : q;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>代码弄的那么晦涩, 付出多跑一次循环的成本, 就是尽量减少CAS操作,不是每次进队列都更新tail变量.</p>
+<h2 id="成本分析"><a href="#成本分析" class="headerlink" title="成本分析"></a>成本分析</h2><p>CAS在x86下是lock cmpxchg指令, 成本有:</p>
 <ul>
-<li>很多同步是无竞争的，一个线程进入临界区然后退出临界区，这个过程往往并没有线程来竞争。Java的synchronized在JVM中的偏向锁轻量级锁的优化也是基于此理由.</li>
-<li>陷入内核的成本其实是很高的. 比如Linux系统调用的VSDO优化就是为了避免陷入内核.之前的*nix系统中，进程间同步机制是通过对kernel object的操作来完成，读写锁对象而陷入内核，成本很高。</li>
+<li>CPU cache一致性(MESI)的同步成本.</li>
+<li>CPU cache miss<br>更重的成本在于, cmpxchg一次可能的load cache miss和一次可能的store cache miss, 在多核高并发的环境下, 基础类库的实现中, 竞争激烈, CAS导致的cache miss就高了. 访问memory的话,成本到100+ns级别.</li>
 </ul>
-<p>粗略的来讲，从应用程序角度看，一个线程去拿锁，通过原子的test-and-set(cmpxchg())指令去看锁变量，如果没有其他线程持有此锁变量。那么当前线程设置锁变量，因为锁变量在用户空间，不需要陷入内核，此时内核对此一无所知。 如果下一个线程在前一个线程持有锁变量的时候，也来拿锁，发现已经被别人持有，那么，需要调用futex系统调用传FUTEX_WAIT参数，让系统把我这个线程休眠在futex的锁变量上， 内核会线程休眠，同事建立相关的数据结构(futex_q/futex_queues)关联用户空间的锁变量(uaddr)和线程. 如果锁持有者释放锁的时候，把锁变量设置，并调用sys_futex，传FUTEX_WAKE参数。</p>
-<p>释放锁的时候，如果没有其他线程阻塞在锁变量上，其实没有必要调用sys_tutex, 这是个优化，可以看<a href="https://cis.temple.edu/~giorgio/cis307/readings/futex.pdf" target="_blank" rel="external">Futexes Are Tricky</a>文中的mutex3实现。在glibc中有个flage FUTEX_WAITERS作用类似。</p>
-<h2 id="实现-how"><a href="#实现-how" class="headerlink" title="实现(how)"></a>实现(how)</h2><p>接口：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">futex</span> <span class="params">(<span class="keyword">int</span> *uaddr, <span class="keyword">int</span> op, <span class="keyword">int</span> val, <span class="keyword">const</span> struct timespec *timeout,<span class="keyword">int</span> *uaddr2, <span class="keyword">int</span> val3)</span></span>;</div></pre></td></tr></table></figure></p>
-<p>常用前四个参数。第三个val传进去的就是futex变量(锁变量)。因为内核需要再次检查val，保证正确性。为什么呢?</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">if (futex_var is true)    // (1)</div><div class="line">    futex(uaddr, FUTEX_WAIT, futex_var) (2)</div></pre></td></tr></table></figure>
-<p>在(1)(2)之间，如果futex_var发生了变化,其实不用休眠线程了，如果内核futex实现不再次检查futex_var,把线程休眠可能再也醒不过来了。</p>
-<p>在内核中通过一个哈希表来维护所有挂起阻塞在futex变量上的task，不同的futex变量会根据其地址标识计算出一个hash key定位到一个哈希桶链上，阻塞在同一个futex变量的所有task会挂到同一个哈希桶链上：<br>(转张图,一图胜千言):<br><img src="https://static.lwn.net/images/ns/kernel/dvh-futexes.png" alt=""></p>
-<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>要写正确的并发库其实是非常困难的，tricky的地方很多。一般来说，应用开发不需要直接用sys_futex. C runtime如glibc里都已经基于futex实现了mutex cond等等(具体实现比较tricky,<a href="http://kexianda.info/2017/08/17/%E5%B9%B6%E5%8F%91%E7%B3%BB%E5%88%97-5-%E4%BB%8EAQS%E5%88%B0futex%E4%B8%89-glibc-NPTL-%E7%9A%84mutex-cond%E5%AE%9E%E7%8E%B0/" target="_blank" rel="external">这里</a>有简单介绍)</p>
-<p>可以写个小程序，用strace来观察用到的系统调用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">strace -c a.out</div></pre></td></tr></table></figure></p>
-<h2 id="Windows平台呢"><a href="#Windows平台呢" class="headerlink" title="Windows平台呢?"></a>Windows平台呢?</h2><p>Windows平台有Mutex和Critical Section，Mutex是kernel object，而Critical Section是user object. 细节可看<a href="https://blogs.msdn.microsoft.com/ce_base/2007/03/26/critical-section-vs-mutex/" target="_blank" rel="external">critical_section vs mutex</a>.</p>
-<p>有人在windows平台做了<a href="http://preshing.com/20111124/always-use-a-lightweight-mutex/" target="_blank" rel="external">micro benchmark</a>, 二者性能相差40~50倍。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考:"></a>参考:</h2><ol>
-<li><a href="https://lwn.net/Articles/360699/" target="_blank" rel="external">Futex Overview</a>  </li>
-<li><a href="http://preshing.com/20111124/always-use-a-lightweight-mutex" target="_blank" rel="external">Always use a lightweight mutex</a></li>
-<li>[Linux Futex浅析] (<a href="http://blog.sina.com.cn/s/blog_e59371cc0102v29b.html" target="_blank" rel="external">http://blog.sina.com.cn/s/blog_e59371cc0102v29b.html</a>)</li>
-</ol>
+<p>没有写driver亲自测试, CAS成本粗糙的估计:<br>非竞态: 大致十几个ns.<br>激烈竞争状态: 1~2百个ns.</p>
+<h2 id="一个玩脱了的例子"><a href="#一个玩脱了的例子" class="headerlink" title="一个玩脱了的例子"></a>一个玩脱了的例子</h2><p>Google的gperftool(TCmalloc)中的SpinLock(Author:大神Sanjay Ghemawat)曾有个<a href="https://github.com/gperftools/gperftools/issues/494" target="_blank" rel="external">bug</a>, 为了在非竞争情况下省几个纳秒,不用CAS而用NoBarrier_Load,Release_Store, 不小心玩脱了,导致了高并发下的performance的bug.<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">Unlock</span><span class="params">()</span> <span class="comment">/*UNLOCK_FUNCTION()*/</span> </span>&#123;</div><div class="line">   uint64 wait_cycles =</div><div class="line">       <span class="keyword">static_cast</span>&lt;uint64&gt;(base::subtle::NoBarrier_Load(&amp;lockword_));</div><div class="line">   ANNOTATE_RWLOCK_RELEASED(<span class="keyword">this</span>, <span class="number">1</span>);</div><div class="line">   base::subtle::Release_Store(&amp;lockword_, kSpinLockFree);</div><div class="line">   <span class="keyword">if</span> (wait_cycles != kSpinLockHeld) &#123;</div><div class="line">     <span class="comment">// Collect contentionz profile info, and speed the wakeup of any waiter.</span></div><div class="line">     <span class="comment">// The wait_cycles value indicates how long this thread spent waiting</span></div><div class="line">     <span class="comment">// for the lock.</span></div><div class="line">     SlowUnlock(wait_cycles);</div><div class="line">   &#125;</div><div class="line"> &#125;</div></pre></td></tr></table></figure></p>
+<p>这个bug其实是个原子性的问题, 脑补下bug发生的条件和导致的性能问题, 很有意思. 后来用CAS操作fix了这个bug.</p>
 
       
     </div>
@@ -398,10 +385,6 @@
           
             <a href="/tags/并发/" rel="tag"># 并发</a>
           
-            <a href="/tags/glibc/" rel="tag"># glibc</a>
-          
-            <a href="/tags/kernel/" rel="tag"># kernel</a>
-          
         </div>
       
 
@@ -413,8 +396,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/08/17/并发系列-5-从AQS到futex三-glibc-NPTL-的mutex-cond实现/" rel="next" title="[并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现">
-                <i class="fa fa-chevron-left"></i> [并发系列-5] 从AQS到futex(三): glibc(NPTL)的mutex/cond实现
+              <a href="/2017/09/10/Performance-Critical优化例子1/" rel="next" title="Performance-Critical的优化例子(1)">
+                <i class="fa fa-chevron-left"></i> Performance-Critical的优化例子(1)
               </a>
             
           </div>
@@ -422,10 +405,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/09/02/读The-Part-Time-Parliament笔记-一/" rel="prev" title="读The Part-Time Parliament笔记(一)">
-                读The Part-Time Parliament笔记(一) <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -565,7 +544,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Overview-what-amp-why"><span class="nav-number">1.</span> <span class="nav-text">Overview(what & why)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现-how"><span class="nav-number">2.</span> <span class="nav-text">实现(how)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实践"><span class="nav-number">3.</span> <span class="nav-text">实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Windows平台呢"><span class="nav-number">4.</span> <span class="nav-text">Windows平台呢?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考:</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-ConcurrentLinkedQueue的进队列例子"><span class="nav-number">1.</span> <span class="nav-text">Java ConcurrentLinkedQueue的进队列例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#成本分析"><span class="nav-number">2.</span> <span class="nav-text">成本分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个玩脱了的例子"><span class="nav-number">3.</span> <span class="nav-text">一个玩脱了的例子</span></a></li></ol></div>
             
 
           </div>

@@ -254,6 +254,144 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/11/12/并发系列-7-CAS的大致成本/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柯贤达">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯贤达">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/11/12/并发系列-7-CAS的大致成本/" itemprop="url">[并发系列-7] CAS的大致成本</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-12T00:00:00+08:00">
+                2017-11-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>多线程的高并发总是个很tricky的事情. 为了避免操作系统的线程context switch成本(以千个ns为单位了), lock-free编程中用各种原子操作(CAS等和内存屏障). 极端的地方, 甚至CAS操作的成本都要考虑. 比如Java中的synchronized的偏向锁/轻量级锁优化就考虑减少CAS操作. 还有JUC包中的一些实现也是尽量减少CAS.<br>那么CAS大致上什么样的一个成本呢?<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/11/12/并发系列-7-CAS的大致成本/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/09/10/Performance-Critical优化例子1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1518,153 +1656,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://kexianda.github.io/2017/07/09/并发系列-0-引子/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="柯贤达">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://avatars7.githubusercontent.com/u/2114336?v=4&s=460">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯贤达">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/07/09/并发系列-0-引子/" itemprop="url">[并发系列-0] 引子</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-09T20:28:06+08:00">
-                2017-07-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>近期和客户(某国内互联网大厂)合作,优化他们的Hive on Cloud项目, 发现并修复了一些并发问题, 一个对技术感兴趣的实习生同事小T和我讨论了一些技术细节问题, 使我有个想法, 想把个人对并发(我这里说的并发是指Java/C++这种共享内存模式的并发,不是指Actor或协程那些)的一些理解, 系统的记录下来.<br>要深入理解并发, 涉及到少许硬件基本知识, 操作系统的线程进程以及进程间通信的知识(可以Linux内核为例). 在这些基础上, 才能更好的理解更高一级的抽象: 比如互斥锁,信号量等.</p>
-<ol>
-<li>概念太多,不同层次的抽象,各个分支, 如何有组织有条理的阐述?  </li>
-</ol>
-<p>CPU的内存模型, Java的内存模型, 高层抽象的mutex, semaphore, condition等, 重入锁, 读写锁. 还有什么自旋锁,偏向锁等等. 总之概念很多.</p>
-<ol>
-<li>深入程度怎么把握, 细节蔓延的太多, 会不会影响条理和简洁.  </li>
-</ol>
-<p>比如对互斥锁信号量等锁的理解: 就是一个状态变量(锁变量)/原子操作,另一个是线程阻塞/唤醒队列的管理,很简单. 但是如果打破砂锅问到底, 可以对细节很深入了解. 比如Java的ReentrantReadWriteLock, 实现里有个sync(用作同步), 需要了解AbstractQueuedSynchronizer类以及primitive LockSupport/UNSAFE的实现. 继续深入, 看去看JVM是如何用pthread_cond_t/pthread_mutex_t等pthread api实现的; 再深入, pthread(glibc的NPTL)又是怎么做的(glibc的代码非常非常的难读). 继续没完没了, 再深入就需要理解NPTL的基础即Linux系统调用futex, 再深入就看futex在内核是怎样实现的. 也许没有必要关注所有细节, 但了解各个层次实现的核心逻辑还是很有好处的.<br>还有, 比如用java的线程池ThreadPoolExecute, 如何处理InterruptedException, 以及为什么要这么处理, interupt到底怎么回事, 在JVM层怎么实现?操作系统里怎么回事?</p>
-<p>要把这些知识整理得深入浅出是要水平的,很花精力和时间. 我非常认同左耳朵耗子说的, 技术文章要写得在马桶上拉屎时都能看懂才是好文章:-) 但这其实要求很高,要有深入理解和很好的有条理的表达. 而我水平和精力都有限, 先随便瞎写, 权作笔记了. 可读性和条理有空再整理.</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/07/09/并发系列-0-引子/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1714,7 +1705,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">26</span>
+                <span class="site-state-item-count">27</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
