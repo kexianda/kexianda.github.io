@@ -102,7 +102,7 @@
 <meta property="og:description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://static.lwn.net/images/ns/kernel/dvh-futexes.png">
-<meta property="og:updated_time" content="2017-09-03T02:02:31.508Z">
+<meta property="og:updated_time" content="2017-11-22T06:22:52.381Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="[并发系列-6] 从AQS到futex(四): Futex&#x2F;Critical Section介绍">
 <meta name="twitter:description" content="Futex(Fast Userspace muTexes),是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.">
@@ -346,12 +346,14 @@
 
       
         <p><a href="https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf" target="_blank" rel="external">Futex(Fast Userspace muTexes)</a>,是Linux提供的最基础的并发原语, C runtime如glibc的mutex，join，condition variable，semphore都是基于futex实现.<br><a id="more"></a></p>
-<h2 id="Overview-what-amp-why"><a href="#Overview-what-amp-why" class="headerlink" title="Overview(what &amp; why)"></a>Overview(what &amp; why)</h2><p>顾名思义，Futex锁变量是在userspace中. Linux从2.5.7开始支持Futex.<br>其设计理由基于两点：</p>
+<h2 id="Overview-what-amp-why"><a href="#Overview-what-amp-why" class="headerlink" title="Overview(what &amp; why)"></a>Overview(what &amp; why)</h2><p>没有futex前,用内核提供的同步机制, 锁变量也是内核提供, 但是这样成本很高.<br>如果用户自己这么实现:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">tryLock(userspaceLockVar) &#123;</div><div class="line">  wait(); // 如果拿不到锁,调用系统调用,休眠本线程</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>但这其实有问题的, 在tryLock和wait之间, 如果别的线程释放了userSpaceLockVar, 当前这个线程还继续休眠自己, 可能就醒不过来了.</p>
+<p>顾名思义，Fast Userspace muTexes锁变量是在userspace中. Linux从2.5.7开始支持Futex.<br>其设计理由基于两点：</p>
 <ul>
 <li>很多同步是无竞争的，一个线程进入临界区然后退出临界区，这个过程往往并没有线程来竞争。Java的synchronized在JVM中的偏向锁轻量级锁的优化也是基于此理由.</li>
 <li>陷入内核的成本其实是很高的. 比如Linux系统调用的VSDO优化就是为了避免陷入内核.之前的*nix系统中，进程间同步机制是通过对kernel object的操作来完成，读写锁对象而陷入内核，成本很高。</li>
 </ul>
-<p>粗略的来讲，从应用程序角度看，一个线程去拿锁，通过原子的test-and-set(cmpxchg())指令去看锁变量，如果没有其他线程持有此锁变量。那么当前线程设置锁变量，因为锁变量在用户空间，不需要陷入内核，此时内核对此一无所知。 如果下一个线程在前一个线程持有锁变量的时候，也来拿锁，发现已经被别人持有，那么，需要调用futex系统调用传FUTEX_WAIT参数，让系统把我这个线程休眠在futex的锁变量上， 内核会线程休眠，同事建立相关的数据结构(futex_q/futex_queues)关联用户空间的锁变量(uaddr)和线程. 如果锁持有者释放锁的时候，把锁变量设置，并调用sys_futex，传FUTEX_WAKE参数。</p>
+<p>粗略的来讲，从应用程序角度看，一个线程去拿锁，通过原子的test-and-set(cmpxchg())指令去看锁变量，如果没有其他线程持有此锁变量。那么当前线程设置锁变量，因为锁变量在用户空间，不需要陷入内核，此时内核对此一无所知。 如果下一个线程在前一个线程持有锁变量的时候，也来拿锁，发现已经被别人持有，那么，需要调用futex系统调用传FUTEX_WAIT参数，让系统把我这个线程休眠在futex的锁变量上.是否真的需要休眠, 内核实现会再检查userspace的锁变量. 内核休眠线程时会建立相关的数据结构(futex_q/futex_queues)关联用户空间的锁变量(uaddr)和线程. 如果锁持有者释放锁的时候，把锁变量设置，并调用sys_futex，传FUTEX_WAKE参数。</p>
 <p>释放锁的时候，如果没有其他线程阻塞在锁变量上，其实没有必要调用sys_tutex, 这是个优化，可以看<a href="https://cis.temple.edu/~giorgio/cis307/readings/futex.pdf" target="_blank" rel="external">Futexes Are Tricky</a>文中的mutex3实现。在glibc中有个flage FUTEX_WAITERS作用类似。</p>
 <h2 id="实现-how"><a href="#实现-how" class="headerlink" title="实现(how)"></a>实现(how)</h2><p>接口：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">futex</span> <span class="params">(<span class="keyword">int</span> *uaddr, <span class="keyword">int</span> op, <span class="keyword">int</span> val, <span class="keyword">const</span> struct timespec *timeout,<span class="keyword">int</span> *uaddr2, <span class="keyword">int</span> val3)</span></span>;</div></pre></td></tr></table></figure></p>
 <p>常用前四个参数。第三个val传进去的就是futex变量(锁变量)。因为内核需要再次检查val，保证正确性。为什么呢?</p>
